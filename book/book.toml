@@ -1,0 +1,6 @@
+[book]
+authors = ["Loky HARK"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Sparse Linear Algebra Library"

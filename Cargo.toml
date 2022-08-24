@@ -1,0 +1,13 @@
+[package]
+name = "spalinalg"
+authors = ["Loky Hark <loky.hark@pm.me>"]
+version = "0.0.0"
+edition = "2021"
+description = "Sparse Linear Algebra Library"
+documentation = "https://docs.rs/spalinalg"
+readme = "README.md"
+repository = "https://github.com/lokyhark/spalinalg"
+homepage = "https://crates.io/crates/spalinalg"
+license = "MIT"
+
+[dependencies]
