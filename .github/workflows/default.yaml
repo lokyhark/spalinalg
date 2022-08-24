@@ -9,6 +9,8 @@ on:
 jobs:
   default:
     runs-on: ubuntu-latest
+    env:
+      CARGO_INCREMENTAL: 0
     steps:
     - name: checkout
       run: |
@@ -16,16 +18,24 @@ jobs:
         git remote add origin $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
         git fetch --depth=1 --update-head-ok origin +$GITHUB_REF:default
         git checkout
-    - name: toolchain
-      run: rustup update stable
+    - name: rust
+      run: |
+        rustup update stable 
+        rustup default stable
+        rustup component add rustfmt
+        rustup component add clippy
+        rustup component add rust-docs
     - name: mdbook
-      run: cargo install mdbook
+      run: |
+        mkdir mdbook
+        curl -Lf https://github.com/rust-lang/mdBook/releases/download/v0.4.21/mdbook-v0.4.21-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook
+        echo `pwd`/mdbook >> $GITHUB_PATH
     - name: version
       run: |
         rustc --version
         cargo --version
-        cargo clippy --version
         cargo fmt --version
+        cargo clippy --version
         mdbook --version
     - name: check
       run: cargo check --verbose --workspace --all-features --all-targets --release
