@@ -444,12 +444,46 @@ impl<T> CooMatrix<T> {
         self.entries.clear()
     }
 
+    /// Returns an iterator over matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CooMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let matrix = CooMatrix::with_entries(2, 2, entries);
+    /// let mut iter = matrix.iter();
+    /// assert_eq!(iter.next(), Some((&0, &0, &1.0)));
+    /// assert_eq!(iter.next(), Some((&1, &1, &2.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
     pub fn iter(&self) -> Iter<T> {
         Iter {
             iter: self.entries.iter(),
         }
     }
 
+    /// Returns a mutable iterator over matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CooMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let mut matrix = CooMatrix::with_entries(2, 2, entries);
+    /// let mut iter = matrix.iter_mut();
+    /// assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
+    /// assert_eq!(iter.next(), Some((&1, &1, &mut 2.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
     pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
             iter: self.entries.iter_mut(),
@@ -458,6 +492,23 @@ impl<T> CooMatrix<T> {
 }
 
 impl<T> Extend<(usize, usize, T)> for CooMatrix<T> {
+    /// Extends coordinate matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CooMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let mut matrix = CooMatrix::new(2, 2);
+    /// matrix.extend(entries);
+    /// assert_eq!(matrix.get_mut(0), Some((&0, &0, &mut 1.0)));
+    /// assert_eq!(matrix.get_mut(1), Some((&1, &1, &mut 2.0)));
+    /// assert!(matrix.get(2).is_none())
+    /// ```
     fn extend<I: IntoIterator<Item = (usize, usize, T)>>(&mut self, iter: I) {
         self.entries.extend(iter)
     }
@@ -468,6 +519,23 @@ impl<T> IntoIterator for CooMatrix<T> {
 
     type IntoIter = IntoIter<T>;
 
+    /// Turns coordinate matrix into iterator over entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CooMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let mut matrix = CooMatrix::with_entries(2, 2, entries);
+    /// let mut iter = matrix.into_iter();
+    /// assert_eq!(iter.next(), Some((0, 0, 1.0)));
+    /// assert_eq!(iter.next(), Some((1, 1, 2.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
     fn into_iter(self) -> Self::IntoIter {
         IntoIter {
             iter: self.entries.into_iter(),
