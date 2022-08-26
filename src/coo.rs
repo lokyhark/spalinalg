@@ -758,7 +758,7 @@ mod tests {
     fn push() {
         let mut matrix: CooMatrix<f64> = CooMatrix::new(1, 1);
         matrix.push(0, 0, 1.0);
-        assert_eq!(matrix.get_mut(0), Some((&0, &0, &mut 1.0)));
+        assert_eq!(matrix.get(0), Some((&0, &0, &1.0)));
     }
 
     #[test]
