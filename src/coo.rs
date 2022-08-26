@@ -1,3 +1,5 @@
+//! Coordinate format module.
+
 /// Coordinate (COO) format sparse matrix.
 ///
 /// # Format

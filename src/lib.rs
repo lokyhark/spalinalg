@@ -1,5 +1,5 @@
 //! Sparse Linear Algebra Library.
 
-mod coo;
+pub mod coo;
 
 pub use coo::CooMatrix;
