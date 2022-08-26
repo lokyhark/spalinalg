@@ -612,4 +612,229 @@ mod tests {
     fn with_capacity_invalid_ncols() {
         CooMatrix::<f64>::with_capacity(0, 1, 1);
     }
+
+    #[test]
+    fn with_entries() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let matrix = CooMatrix::with_entries(2, 3, entries);
+        assert_eq!(matrix.length(), 3);
+        assert!(matrix.capacity() >= 3);
+        assert_eq!(matrix.get(0), Some((&0, &0, &1.0)));
+        assert_eq!(matrix.get(1), Some((&1, &0, &2.0)));
+        assert_eq!(matrix.get(2), Some((&0, &2, &3.0)));
+        assert!(matrix.get(3).is_none());
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_entries_invalid_nrows() {
+        CooMatrix::<f64>::with_entries(0, 1, vec![]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_entries_invalid_ncols() {
+        CooMatrix::<f64>::with_entries(1, 0, vec![]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_entries_invalid_row() {
+        CooMatrix::<f64>::with_entries(1, 1, vec![(1, 0, 1.0)]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_entries_invalid_col() {
+        CooMatrix::<f64>::with_entries(1, 1, vec![(0, 1, 1.0)]);
+    }
+
+    #[test]
+    fn with_triplets() {
+        let rowind = vec![0, 1];
+        let colind = vec![1, 0];
+        let values = vec![-1.0, 1.0];
+        let matrix = CooMatrix::with_triplets(2, 2, rowind, colind, values);
+        assert_eq!(matrix.length(), 2);
+        assert!(matrix.capacity() >= 2);
+        assert_eq!(matrix.get(0), Some((&0, &1, &-1.0)));
+        assert_eq!(matrix.get(1), Some((&1, &0, &1.0)));
+        assert!(matrix.get(2).is_none());
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_triplets_invalid_nrows() {
+        CooMatrix::<f64>::with_triplets(0, 1, vec![], vec![], vec![]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_triplets_invalid_ncols() {
+        CooMatrix::<f64>::with_triplets(1, 0, vec![], vec![], vec![]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_triplets_invalid_triplets_rowind_length() {
+        CooMatrix::<f64>::with_triplets(1, 1, vec![], vec![0], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_triplets_invalid_triplets_colind_length() {
+        CooMatrix::<f64>::with_triplets(1, 1, vec![0], vec![], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_triplets_invalid_triplets_values_length() {
+        CooMatrix::<f64>::with_triplets(1, 1, vec![0], vec![0], vec![]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_triplets_invalid_row() {
+        CooMatrix::<f64>::with_triplets(1, 1, vec![1], vec![0], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn with_triplets_invalid_col() {
+        CooMatrix::<f64>::with_triplets(1, 1, vec![0], vec![1], vec![1.0]);
+    }
+
+    #[test]
+    fn nrows() {
+        let matrix: CooMatrix<f64> = CooMatrix::new(1, 2);
+        assert_eq!(matrix.nrows(), 1);
+    }
+
+    #[test]
+    fn ncols() {
+        let matrix: CooMatrix<f64> = CooMatrix::new(1, 2);
+        assert_eq!(matrix.ncols(), 2);
+    }
+
+    #[test]
+    fn shape() {
+        let matrix: CooMatrix<f64> = CooMatrix::new(1, 2);
+        assert_eq!(matrix.shape(), (1, 2));
+    }
+
+    #[test]
+    fn length() {
+        let mut matrix: CooMatrix<f64> = CooMatrix::new(1, 1);
+        assert_eq!(matrix.length(), 0);
+        matrix.push(0, 0, 1.0);
+        assert_eq!(matrix.length(), 1);
+    }
+
+    #[test]
+    fn capacity() {
+        let mut matrix: CooMatrix<f64> = CooMatrix::new(1, 1);
+        assert_eq!(matrix.capacity(), 0);
+        matrix.push(0, 0, 1.0);
+        assert!(matrix.capacity() >= 1);
+    }
+
+    #[test]
+    fn get() {
+        let entries = vec![(0, 0, 1.0)];
+        let matrix = CooMatrix::with_entries(1, 1, entries);
+        assert_eq!(matrix.get(0), Some((&0, &0, &1.0)));
+        assert!(matrix.get(1).is_none());
+    }
+
+    #[test]
+    fn get_mut() {
+        let entries = vec![(0, 0, 1.0)];
+        let mut matrix = CooMatrix::with_entries(1, 1, entries);
+        assert_eq!(matrix.get_mut(0), Some((&0, &0, &mut 1.0)));
+        assert!(matrix.get_mut(1).is_none());
+    }
+
+    #[test]
+    fn push() {
+        let mut matrix: CooMatrix<f64> = CooMatrix::new(1, 1);
+        matrix.push(0, 0, 1.0);
+        assert_eq!(matrix.get_mut(0), Some((&0, &0, &mut 1.0)));
+    }
+
+    #[test]
+    #[should_panic]
+    fn push_invalid_row() {
+        let mut matrix: CooMatrix<f64> = CooMatrix::new(1, 1);
+        matrix.push(1, 0, 1.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn push_invalid_col() {
+        let mut matrix: CooMatrix<f64> = CooMatrix::new(1, 1);
+        matrix.push(0, 1, 1.0);
+    }
+
+    #[test]
+    fn pop() {
+        let entries = vec![(0, 0, 1.0)];
+        let mut matrix = CooMatrix::with_entries(1, 1, entries);
+        assert_eq!(matrix.pop(), Some((0, 0, 1.0)));
+        assert_eq!(matrix.length(), 0);
+        assert!(matrix.pop().is_none());
+    }
+
+    #[test]
+    fn clear() {
+        let entries = vec![(0, 0, 1.0)];
+        let mut matrix = CooMatrix::with_entries(1, 1, entries);
+        matrix.clear();
+        assert_eq!(matrix.length(), 0);
+    }
+
+    #[test]
+    fn iter() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let matrix = CooMatrix::with_entries(2, 3, entries);
+        let mut iter = matrix.iter();
+        assert_eq!(iter.next(), Some((&0, &0, &1.0)));
+        assert_eq!(iter.next(), Some((&1, &0, &2.0)));
+        assert_eq!(iter.next(), Some((&0, &2, &3.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn iter_mut() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let mut matrix = CooMatrix::with_entries(2, 3, entries);
+        let mut iter = matrix.iter_mut();
+        assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
+        assert_eq!(iter.next(), Some((&1, &0, &mut 2.0)));
+        assert_eq!(iter.next(), Some((&0, &2, &mut 3.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn extend() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let mut matrix = CooMatrix::new(2, 3);
+        matrix.extend(entries);
+        assert_eq!(matrix.length(), 3);
+        assert!(matrix.capacity() >= 3);
+        assert_eq!(matrix.get(0), Some((&0, &0, &1.0)));
+        assert_eq!(matrix.get(1), Some((&1, &0, &2.0)));
+        assert_eq!(matrix.get(2), Some((&0, &2, &3.0)));
+        assert!(matrix.get(3).is_none());
+    }
+
+    #[test]
+    fn into_iter() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let matrix = CooMatrix::with_entries(2, 3, entries);
+        let mut iter = matrix.into_iter();
+        assert_eq!(iter.next(), Some((0, 0, 1.0)));
+        assert_eq!(iter.next(), Some((1, 0, 2.0)));
+        assert_eq!(iter.next(), Some((0, 2, 3.0)));
+        assert!(iter.next().is_none());
+    }
 }
