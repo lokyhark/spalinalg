@@ -192,7 +192,7 @@ impl<T> CooMatrix<T> {
         }
     }
 
-    /// Creates a new coordinate matrix with `nrows` rows, `ncols` columns and specified `triplets`.
+    /// Creates a new coordinate matrix with `nrows` rows, `ncols` columns and specified triplets.
     ///
     /// # Properties
     ///
@@ -354,7 +354,7 @@ impl<T> CooMatrix<T> {
     /// let matrix = CooMatrix::with_entries(2, 2, entries);
     /// assert_eq!(matrix.get(0), Some((&0, &0, &1.0)));
     /// assert_eq!(matrix.get(1), Some((&1, &1, &2.0)));
-    /// assert!(matrix.get(2).is_none())
+    /// assert!(matrix.get(2).is_none());
     /// ```
     pub fn get(&self, index: usize) -> Option<(&usize, &usize, &T)> {
         self.entries
@@ -505,8 +505,8 @@ impl<T> Extend<(usize, usize, T)> for CooMatrix<T> {
     /// ];
     /// let mut matrix = CooMatrix::new(2, 2);
     /// matrix.extend(entries);
-    /// assert_eq!(matrix.get_mut(0), Some((&0, &0, &mut 1.0)));
-    /// assert_eq!(matrix.get_mut(1), Some((&1, &1, &mut 2.0)));
+    /// assert_eq!(matrix.get(0), Some((&0, &0, &1.0)));
+    /// assert_eq!(matrix.get(1), Some((&1, &1, &2.0)));
     /// assert!(matrix.get(2).is_none())
     /// ```
     fn extend<I: IntoIterator<Item = (usize, usize, T)>>(&mut self, iter: I) {

@@ -71,6 +71,32 @@ pub struct IntoIter<T> {
 }
 
 impl<T> DokMatrix<T> {
+    /// Creates a new dictionnary of keys matrix with `nrows` rows and `ncols` columns.
+    ///
+    /// # Properties
+    ///
+    /// The created matrix has following properties:
+    /// - the matrix is empty (`matrix.length() == 0`)
+    /// - the matrix has no capacity (`matrix.capacity() == 0`)
+    /// - the matrix will **not** allocate memory before any insert operation
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - `nrows == 0`
+    /// - `ncols == 0`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix: DokMatrix<f64> = DokMatrix::new(1, 2);
+    /// assert_eq!(matrix.nrows(), 1);
+    /// assert_eq!(matrix.ncols(), 2);
+    /// assert_eq!(matrix.length(), 0);
+    /// assert_eq!(matrix.capacity(), 0);
+    /// ```
     pub fn new(nrows: usize, ncols: usize) -> Self {
         assert!(nrows > 0);
         assert!(ncols > 0);
@@ -81,6 +107,32 @@ impl<T> DokMatrix<T> {
         }
     }
 
+    /// Creates a new dictionnary of keys matrix with `nrows` rows, `ncols` columns and specified `capacity`.
+    ///
+    /// # Properties
+    ///
+    /// The created matrix has following properties:
+    /// - the matrix is empty (`matrix.length() == 0`)
+    /// - the matrix capacity is at least `capacity` (`matrix.capacity() >= capacity`)
+    /// - the matrix will be able to hold `capacity` entries without reallocating
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - `nrows == 0`
+    /// - `ncols == 0`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix: DokMatrix<f64> = DokMatrix::with_capacity(1, 2, 2);
+    /// assert_eq!(matrix.nrows(), 1);
+    /// assert_eq!(matrix.ncols(), 2);
+    /// assert_eq!(matrix.length(), 0);
+    /// assert!(matrix.capacity() >= 2);
+    /// ```
     pub fn with_capacity(nrows: usize, ncols: usize, capacity: usize) -> Self {
         assert!(nrows > 0);
         assert!(ncols > 0);
@@ -91,6 +143,38 @@ impl<T> DokMatrix<T> {
         }
     }
 
+    /// Creates a new dictionnary of keys matrix with `nrows` rows, `ncols` columns and specified `entries`.
+    ///
+    /// # Properties
+    ///
+    /// The created matrix has following properties:
+    /// - the matrix is filled with entries (`matrix.length() == entries.len()`)
+    /// - the matrix capacity is at least `entries.len()` (`matrix.capacity() >= entries.len()`)
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - `nrows == 0`
+    /// - `ncols == 0`
+    /// - for any entry: `row >= nrows` or `col >= ncols`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let matrix = DokMatrix::with_entries(2, 3, entries);
+    /// assert_eq!(matrix.nrows(), 2);
+    /// assert_eq!(matrix.ncols(), 3);
+    /// assert_eq!(matrix.length(), 2);
+    /// assert!(matrix.capacity() >= 2);
+    /// assert_eq!(matrix.get(0, 0), Some(&1.0));
+    /// assert_eq!(matrix.get(1, 1), Some(&2.0));
+    /// ```
     pub fn with_entries<I>(nrows: usize, ncols: usize, entries: I) -> Self
     where
         I: IntoIterator<Item = (usize, usize, T)>,
@@ -109,6 +193,38 @@ impl<T> DokMatrix<T> {
         }
     }
 
+    /// Creates a new dictionnary of keys matrix with `nrows` rows, `ncols` columns and specified triplets.
+    ///
+    /// # Properties
+    ///
+    /// The created matrix has following properties:
+    /// - the matrix is filled with triplets (`matrix.length() == values.len()`)
+    /// - the matrix capacity is at least `values.len()` (`matrix.capacity() >= values.len()`)
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - `nrows == 0`
+    /// - `ncols == 0`
+    /// - `values.len() != rowind.len()` or `values.len() != colind.len()`
+    /// - for any triplet: `row >= nrows` or `col >= ncols`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let rows = [0, 1];
+    /// let cols = [1, 0];
+    /// let values = [1.0, 2.0];
+    /// let matrix = DokMatrix::with_triplets(2, 3, rows, cols, values);
+    /// assert_eq!(matrix.nrows(), 2);
+    /// assert_eq!(matrix.ncols(), 3);
+    /// assert_eq!(matrix.length(), 2);
+    /// assert!(matrix.capacity() >= 2);
+    /// assert_eq!(matrix.get(0, 1), Some(&1.0));
+    /// assert_eq!(matrix.get(1, 0), Some(&2.0));
+    /// ```
     pub fn with_triplets<R, C, V>(
         nrows: usize,
         ncols: usize,
@@ -145,60 +261,239 @@ impl<T> DokMatrix<T> {
         }
     }
 
+    /// Returns number of rows of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix = DokMatrix::<f64>::new(1, 2);
+    /// assert_eq!(matrix.nrows(), 1);
+    /// ```
     pub fn nrows(&self) -> usize {
         self.nrows
     }
 
+    /// Returns number of rows of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix = DokMatrix::<f64>::new(1, 2);
+    /// assert_eq!(matrix.ncols(), 2);
+    /// ```
     pub fn ncols(&self) -> usize {
         self.ncols
     }
 
+    /// Returns the shape `(nrows, ncols)` of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix = DokMatrix::<f64>::new(1, 2);
+    /// assert_eq!(matrix.shape(), (1, 2));
+    /// ```
     pub fn shape(&self) -> (usize, usize) {
         (self.nrows, self.ncols)
     }
 
+    /// Returns the number of entries/non-zeros of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix = DokMatrix::<f64>::new(2, 2);
+    /// assert_eq!(matrix.length(), 0);
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let matrix = DokMatrix::with_entries(2, 2, entries);
+    /// assert_eq!(matrix.length(), 2);
+    /// ```
     pub fn length(&self) -> usize {
         self.entries.len()
     }
 
+    /// Returns the capacity of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix = DokMatrix::<f64>::new(2, 2);
+    /// assert_eq!(matrix.capacity(), 0);
+    ///
+    /// let matrix = DokMatrix::<f64>::with_capacity(2, 2, 1);
+    /// assert!(matrix.capacity() >= 1);
+    /// ```
     pub fn capacity(&self) -> usize {
         self.entries.capacity()
     }
 
+    /// Determines if the matrix contains a non zero at `(row, col)`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - `row >= self.nrows()`
+    /// - `col >= self.nclos()`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let matrix = DokMatrix::with_entries(2, 2, entries);
+    /// assert!(matrix.contains(0, 0));
+    /// assert!(matrix.contains(1, 1));
+    /// assert!(!matrix.contains(1, 0));
+    /// assert!(!matrix.contains(0, 1));
     pub fn contains(&self, row: usize, col: usize) -> bool {
         assert!(row < self.nrows);
         assert!(col < self.ncols);
         self.entries.contains_key(&(row, col))
     }
 
+    /// Returns a reference to an entry of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let matrix = DokMatrix::with_entries(2, 2, entries);
+    /// assert_eq!(matrix.get(0, 0), Some(&1.0));
+    /// assert_eq!(matrix.get(1, 1), Some(&2.0));
+    /// assert!(matrix.get(1, 0).is_none());
+    /// assert!(matrix.get(0, 1).is_none());
+    /// ```
     pub fn get(&self, row: usize, col: usize) -> Option<&T> {
         assert!(row < self.nrows);
         assert!(col < self.ncols);
         self.entries.get(&(row, col))
     }
 
+    /// Returns a mutable reference to an entry of the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let mut matrix = DokMatrix::with_entries(2, 2, entries);
+    /// assert_eq!(matrix.get_mut(0, 0), Some(&mut 1.0));
+    /// assert_eq!(matrix.get_mut(1, 1), Some(&mut 2.0));
+    /// assert!(matrix.get(1, 0).is_none());
+    /// assert!(matrix.get(0, 1).is_none());
+    /// ```
     pub fn get_mut(&mut self, row: usize, col: usize) -> Option<&mut T> {
         assert!(row < self.nrows);
         assert!(col < self.ncols);
         self.entries.get_mut(&(row, col))
     }
 
+    /// Insert an entry into the matrix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - `row >= self.nrows()`
+    /// - `col >= self.nclos()`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let mut matrix = DokMatrix::<f64>::new(1, 1);
+    /// matrix.insert(0, 0, 1.0);
+    /// assert_eq!(matrix.get(0, 0), Some(&1.0));
+    /// ```
     pub fn insert(&mut self, row: usize, col: usize, value: T) -> Option<T> {
         assert!(row < self.nrows);
         assert!(col < self.ncols);
         self.entries.insert((row, col), value)
     }
 
+    /// Clear all entries from the matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let mut matrix = DokMatrix::with_entries(2, 2, entries);
+    /// assert_eq!(matrix.length(), 2);
+    /// matrix.clear();
+    /// assert_eq!(matrix.length(), 0)
+    /// ```
     pub fn clear(&mut self) {
         self.entries.clear()
     }
 
+    /// Returns an iterator over matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    /// ];
+    /// let matrix = DokMatrix::with_entries(1, 1, entries);
+    /// let mut iter = matrix.iter();
+    /// assert_eq!(iter.next(), Some((&0, &0, &1.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
     pub fn iter(&self) -> Iter<T> {
         Iter {
             iter: self.entries.iter(),
         }
     }
 
+    /// Returns a mutable iterator over matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    /// ];
+    /// let mut matrix = DokMatrix::with_entries(1, 1, entries);
+    /// let mut iter = matrix.iter_mut();
+    /// assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
     pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
             iter: self.entries.iter_mut(),
@@ -207,6 +502,22 @@ impl<T> DokMatrix<T> {
 }
 
 impl<T> Extend<(usize, usize, T)> for DokMatrix<T> {
+    /// Extends dictionnary of keys matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let mut matrix = DokMatrix::new(2, 2);
+    /// matrix.extend(entries);
+    /// assert_eq!(matrix.get(0, 0), Some(&1.0));
+    /// assert_eq!(matrix.get(1, 1), Some(&2.0));
+    /// ```
     fn extend<I: IntoIterator<Item = (usize, usize, T)>>(&mut self, iter: I) {
         self.entries
             .extend(iter.into_iter().map(|(r, c, v)| ((r, c), v)));
@@ -218,6 +529,23 @@ impl<T> IntoIterator for DokMatrix<T> {
 
     type IntoIter = IntoIter<T>;
 
+    /// Turns dictionnary of keys matrix into iterator over entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let mut matrix = DokMatrix::with_entries(2, 2, entries);
+    /// let mut iter = matrix.into_iter();
+    /// assert_eq!(iter.next(), Some((0, 0, 1.0)));
+    /// assert_eq!(iter.next(), Some((1, 1, 2.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
     fn into_iter(self) -> Self::IntoIter {
         IntoIter {
             iter: self.entries.into_iter(),
