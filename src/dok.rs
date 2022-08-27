@@ -538,12 +538,10 @@ impl<T> IntoIterator for DokMatrix<T> {
     ///
     /// let entries = vec![
     ///     (0, 0, 1.0),
-    ///     (1, 1, 2.0),
     /// ];
-    /// let mut matrix = DokMatrix::with_entries(2, 2, entries);
+    /// let mut matrix = DokMatrix::with_entries(1, 1, entries);
     /// let mut iter = matrix.into_iter();
     /// assert_eq!(iter.next(), Some((0, 0, 1.0)));
-    /// assert_eq!(iter.next(), Some((1, 1, 2.0)));
     /// assert!(iter.next().is_none());
     /// ```
     fn into_iter(self) -> Self::IntoIter {
