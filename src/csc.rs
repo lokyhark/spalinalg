@@ -135,3 +135,44 @@ impl<T> CscMatrix<T> {
         *self.colptr.last().unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn new_invalid_nrows() {
+        CscMatrix::<f64>::new(0, 2, vec![0, 1, 1], vec![0], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_invalid_ncols() {
+        CscMatrix::<f64>::new(1, 0, vec![0, 1, 1], vec![0], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_invalid_colptr_first_not_zero() {
+        CscMatrix::<f64>::new(1, 2, vec![1, 1, 1], vec![0], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_invalid_colptr_invalid_length() {
+        CscMatrix::<f64>::new(1, 2, vec![0, 1], vec![0], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_invalid_rowind() {
+        CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![1], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_invalid_rowind_values() {
+        CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![0], vec![1.0, 2.0]);
+    }
+}
