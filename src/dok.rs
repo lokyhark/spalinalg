@@ -519,8 +519,13 @@ impl<T> Extend<(usize, usize, T)> for DokMatrix<T> {
     /// assert_eq!(matrix.get(1, 1), Some(&2.0));
     /// ```
     fn extend<I: IntoIterator<Item = (usize, usize, T)>>(&mut self, iter: I) {
+        let entries: Vec<_> = iter.into_iter().collect();
+        for (row, col, _) in &entries {
+            assert!(*row < self.nrows);
+            assert!(*col < self.ncols);
+        }
         self.entries
-            .extend(iter.into_iter().map(|(r, c, v)| ((r, c), v)));
+            .extend(entries.into_iter().map(|(r, c, v)| ((r, c), v)));
     }
 }
 
