@@ -1,6 +1,6 @@
 //! Coordinate format module.
 
-use crate::DokMatrix;
+use crate::{CscMatrix, CsrMatrix, DokMatrix};
 
 /// Coordinate (COO) format sparse matrix.
 ///
@@ -574,6 +574,28 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
+impl<T> From<CscMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSC format to COO format.
+    fn from(csc: CscMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csc.nrows(),
+            ncols: csc.ncols(),
+            entries: csc.into_iter().collect(),
+        }
+    }
+}
+
+impl<T> From<CsrMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSR format to COO format.
+    fn from(csr: CsrMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csr.nrows(),
+            ncols: csr.ncols(),
+            entries: csr.into_iter().collect(),
+        }
+    }
+}
+
 impl<T> From<DokMatrix<T>> for CooMatrix<T> {
     /// Conversion from DOK format to COO format.
     ///
@@ -588,7 +610,11 @@ impl<T> From<DokMatrix<T>> for CooMatrix<T> {
     /// let coo = CooMatrix::from(dok);
     /// ```
     fn from(dok: DokMatrix<T>) -> Self {
-        CooMatrix::with_entries(dok.nrows(), dok.ncols(), dok)
+        CooMatrix {
+            nrows: dok.nrows(),
+            ncols: dok.ncols(),
+            entries: dok.into_iter().collect(),
+        }
     }
 }
 
