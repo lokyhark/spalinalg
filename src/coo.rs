@@ -576,6 +576,15 @@ impl<T> Iterator for IntoIter<T> {
 
 impl<T> From<CscMatrix<T>> for CooMatrix<T> {
     /// Conversion from CSC format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CscMatrix};
+    ///
+    /// let csc = CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(csc);
+    /// ```
     fn from(csc: CscMatrix<T>) -> Self {
         CooMatrix {
             nrows: csc.nrows(),
@@ -587,6 +596,14 @@ impl<T> From<CscMatrix<T>> for CooMatrix<T> {
 
 impl<T> From<CsrMatrix<T>> for CooMatrix<T> {
     /// Conversion from CSR format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CsrMatrix};
+    ///
+    /// let csr = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(csr);
     fn from(csr: CsrMatrix<T>) -> Self {
         CooMatrix {
             nrows: csr.nrows(),
