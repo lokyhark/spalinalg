@@ -1,6 +1,8 @@
 //! Dictionnary of Keys format module.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::AddAssign};
+
+use crate::{CooMatrix, CscMatrix, CsrMatrix};
 
 /// Dictionnary of Keys (DOK) format sparse matrix.
 ///
@@ -577,6 +579,76 @@ impl<T> Iterator for IntoIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|((r, c), v)| (r, c, v))
+    }
+}
+
+impl<T: Default + AddAssign> From<CooMatrix<T>> for DokMatrix<T> {
+    /// Conversion from COO format to DOK format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, DokMatrix};
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 1, 2.0),
+    /// ];
+    /// let coo = CooMatrix::with_entries(2, 3, entries);
+    /// let dok = DokMatrix::from(coo);
+    /// ```
+    fn from(coo: CooMatrix<T>) -> Self {
+        let nrows = coo.nrows();
+        let ncols = coo.ncols();
+        let mut map = HashMap::with_capacity(coo.length());
+        for (row, col, value) in coo.into_iter() {
+            *map.entry((row, col)).or_default() += value;
+        }
+        DokMatrix {
+            nrows,
+            ncols,
+            entries: map,
+        }
+    }
+}
+
+impl<T> From<CscMatrix<T>> for DokMatrix<T> {
+    /// Conversion from CSC format to DOK format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CscMatrix, DokMatrix};
+    ///
+    /// let csc = CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let dok = DokMatrix::from(csc);
+    /// ```
+    fn from(csc: CscMatrix<T>) -> Self {
+        DokMatrix {
+            nrows: csc.nrows(),
+            ncols: csc.ncols(),
+            entries: csc.into_iter().map(|(r, c, v)| ((r, c), v)).collect(),
+        }
+    }
+}
+
+impl<T> From<CsrMatrix<T>> for DokMatrix<T> {
+    /// Conversion from CSR format to DOK format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CsrMatrix, DokMatrix};
+    ///
+    /// let csr = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let dok = DokMatrix::from(csr);
+    /// ```
+    fn from(csr: CsrMatrix<T>) -> Self {
+        DokMatrix {
+            nrows: csr.nrows(),
+            ncols: csr.ncols(),
+            entries: csr.into_iter().map(|(r, c, v)| ((r, c), v)).collect(),
+        }
     }
 }
 
