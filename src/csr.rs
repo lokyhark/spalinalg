@@ -1,6 +1,6 @@
 //! Compressed sparse row format module.
 
-use crate::{scalar::Scalar, CooMatrix};
+use crate::{scalar::Scalar, CooMatrix, CscMatrix};
 
 /// Compressed sparse row (CSR) format matrix.
 #[derive(Debug)]
@@ -386,6 +386,57 @@ impl<T: Scalar> From<CooMatrix<T>> for CsrMatrix<T> {
     }
 }
 
+impl<T: Scalar> From<CscMatrix<T>> for CsrMatrix<T> {
+    fn from(csc: CscMatrix<T>) -> Self {
+        let nrows = csc.nrows();
+        let ncols = csc.ncols();
+        let colptr = csc.colptr();
+        let rowind = csc.rowind();
+        let colval = csc.values();
+        let nz = csc.nnz();
+
+        // Count number of entries in each row
+        let mut vec = vec![0; nrows];
+        for col in 0..ncols {
+            for row in rowind.iter().take(colptr[col + 1]).skip(colptr[col]) {
+                vec[*row] += 1;
+            }
+        }
+
+        // Construct row pointers
+        let mut rowptr = Vec::with_capacity(nrows + 1);
+        let mut sum = 0;
+        rowptr.push(0);
+        for value in vec {
+            sum += value;
+            rowptr.push(sum);
+        }
+
+        // Construct row form
+        let mut vec = rowptr[..nrows].to_vec();
+        let mut colind = vec![0; nz];
+        let mut rowval = vec![T::zero(); nz];
+        for col in 0..ncols {
+            for ptr in colptr[col]..colptr[col + 1] {
+                let row = rowind[ptr];
+                let idx = &mut vec[row];
+                colind[*idx] = col;
+                rowval[*idx] = colval[ptr];
+                *idx += 1;
+            }
+        }
+
+        // Construct CsrMatrix
+        CsrMatrix {
+            nrows,
+            ncols,
+            rowptr,
+            colind,
+            values: rowval,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -445,9 +496,24 @@ mod tests {
         coo.push(1, 0, 0.0); // zero entry
         coo.push(1, 1, 1.00); // |
         coo.push(1, 1, -1.0); // |> numerical cancel
-        let csc = CsrMatrix::from(coo);
-        assert_eq!(csc.rowptr, [0, 3, 4]);
-        assert_eq!(csc.colind, [0, 1, 2, 2]);
-        assert_eq!(csc.values, [3.0, 3.0, 4.0, 5.0]);
+        let csr = CsrMatrix::from(coo);
+        assert_eq!(csr.rowptr, [0, 3, 4]);
+        assert_eq!(csr.colind, [0, 1, 2, 2]);
+        assert_eq!(csr.values, [3.0, 3.0, 4.0, 5.0]);
+    }
+
+    #[test]
+    fn from_csc() {
+        let csc = CscMatrix::new(
+            2,
+            3,
+            vec![0, 1, 2, 4],
+            vec![0, 0, 0, 1],
+            vec![3.0, 3.0, 4.0, 5.0],
+        );
+        let csr = CsrMatrix::from(csc);
+        assert_eq!(csr.rowptr, [0, 3, 4]);
+        assert_eq!(csr.colind, [0, 1, 2, 2]);
+        assert_eq!(csr.values, [3.0, 3.0, 4.0, 5.0]);
     }
 }
