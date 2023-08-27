@@ -1,6 +1,6 @@
 //! Coordinate format module.
 
-use crate::{CscMatrix, CsrMatrix, DokMatrix};
+use crate::{scalar::Scalar, CscMatrix, CsrMatrix, DokMatrix};
 
 /// Coordinate (COO) format sparse matrix.
 ///
@@ -47,7 +47,7 @@ use crate::{CscMatrix, CsrMatrix, DokMatrix};
 /// - Mutable iterator [`CooMatrix::iter_mut`]
 /// - Move iterator [`CooMatrix::into_iter`]
 #[derive(Clone, Debug)]
-pub struct CooMatrix<T> {
+pub struct CooMatrix<T: Scalar> {
     nrows: usize,
     ncols: usize,
     entries: Vec<(usize, usize, T)>,
@@ -71,7 +71,7 @@ pub struct IntoIter<T> {
     iter: std::vec::IntoIter<(usize, usize, T)>,
 }
 
-impl<T> CooMatrix<T> {
+impl<T: Scalar> CooMatrix<T> {
     /// Creates a new coordinate matrix with `nrows` rows and `ncols` columns.
     ///
     /// # Properties
@@ -493,7 +493,7 @@ impl<T> CooMatrix<T> {
     }
 }
 
-impl<T> Extend<(usize, usize, T)> for CooMatrix<T> {
+impl<T: Scalar> Extend<(usize, usize, T)> for CooMatrix<T> {
     /// Extends coordinate matrix entries.
     ///
     /// # Examples
@@ -521,7 +521,7 @@ impl<T> Extend<(usize, usize, T)> for CooMatrix<T> {
     }
 }
 
-impl<T> IntoIterator for CooMatrix<T> {
+impl<T: Scalar> IntoIterator for CooMatrix<T> {
     type Item = (usize, usize, T);
 
     type IntoIter = IntoIter<T>;
@@ -566,7 +566,7 @@ impl<'iter, T> Iterator for IterMut<'iter, T> {
     }
 }
 
-impl<T> Iterator for IntoIter<T> {
+impl<T: Scalar> Iterator for IntoIter<T> {
     type Item = (usize, usize, T);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -574,7 +574,7 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
-impl<T> From<CscMatrix<T>> for CooMatrix<T> {
+impl<T: Scalar> From<CscMatrix<T>> for CooMatrix<T> {
     /// Conversion from CSC format to COO format.
     ///
     /// # Examples
@@ -594,7 +594,7 @@ impl<T> From<CscMatrix<T>> for CooMatrix<T> {
     }
 }
 
-impl<T> From<CsrMatrix<T>> for CooMatrix<T> {
+impl<T: Scalar> From<CsrMatrix<T>> for CooMatrix<T> {
     /// Conversion from CSR format to COO format.
     ///
     /// # Examples
@@ -613,7 +613,7 @@ impl<T> From<CsrMatrix<T>> for CooMatrix<T> {
     }
 }
 
-impl<T> From<DokMatrix<T>> for CooMatrix<T> {
+impl<T: Scalar> From<DokMatrix<T>> for CooMatrix<T> {
     /// Conversion from DOK format to COO format.
     ///
     /// # Examples

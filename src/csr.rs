@@ -1,8 +1,10 @@
 //! Compressed sparse row format module.
 
+use crate::scalar::Scalar;
+
 /// Compressed sparse row (CSR) format matrix.
 #[derive(Debug)]
-pub struct CsrMatrix<T> {
+pub struct CsrMatrix<T: Scalar> {
     nrows: usize,
     ncols: usize,
     rowptr: Vec<usize>,
@@ -28,7 +30,7 @@ pub struct IntoIter<T> {
     iter: std::vec::IntoIter<(usize, usize, T)>,
 }
 
-impl<T> CsrMatrix<T> {
+impl<T: Scalar> CsrMatrix<T> {
     pub fn new(
         nrows: usize,
         ncols: usize,
@@ -208,7 +210,7 @@ impl<T> CsrMatrix<T> {
     }
 }
 
-impl<T> IntoIterator for CsrMatrix<T> {
+impl<T: Scalar> IntoIterator for CsrMatrix<T> {
     type Item = (usize, usize, T);
 
     type IntoIter = IntoIter<T>;
@@ -257,7 +259,7 @@ impl<'iter, T> Iterator for IterMut<'iter, T> {
     }
 }
 
-impl<T> Iterator for IntoIter<T> {
+impl<T: Scalar> Iterator for IntoIter<T> {
     type Item = (usize, usize, T);
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -1,8 +1,8 @@
 //! Dictionnary of Keys format module.
 
-use std::{collections::HashMap, ops::AddAssign};
+use std::collections::HashMap;
 
-use crate::{CooMatrix, CscMatrix, CsrMatrix};
+use crate::{scalar::Scalar, CooMatrix, CscMatrix, CsrMatrix};
 
 /// Dictionnary of Keys (DOK) format sparse matrix.
 ///
@@ -48,7 +48,7 @@ use crate::{CooMatrix, CscMatrix, CsrMatrix};
 /// - Mutable iterator [`DokMatrix::iter_mut`]
 /// - Move iterator [`DokMatrix::into_iter`]
 #[derive(Clone, Debug)]
-pub struct DokMatrix<T> {
+pub struct DokMatrix<T: Scalar> {
     nrows: usize,
     ncols: usize,
     entries: HashMap<(usize, usize), T>,
@@ -72,7 +72,7 @@ pub struct IntoIter<T> {
     iter: std::collections::hash_map::IntoIter<(usize, usize), T>,
 }
 
-impl<T> DokMatrix<T> {
+impl<T: Scalar> DokMatrix<T> {
     /// Creates a new dictionnary of keys matrix with `nrows` rows and `ncols` columns.
     ///
     /// # Properties
@@ -503,7 +503,7 @@ impl<T> DokMatrix<T> {
     }
 }
 
-impl<T> Extend<(usize, usize, T)> for DokMatrix<T> {
+impl<T: Scalar> Extend<(usize, usize, T)> for DokMatrix<T> {
     /// Extends dictionnary of keys matrix entries.
     ///
     /// # Examples
@@ -531,7 +531,7 @@ impl<T> Extend<(usize, usize, T)> for DokMatrix<T> {
     }
 }
 
-impl<T> IntoIterator for DokMatrix<T> {
+impl<T: Scalar> IntoIterator for DokMatrix<T> {
     type Item = (usize, usize, T);
 
     type IntoIter = IntoIter<T>;
@@ -574,7 +574,7 @@ impl<'iter, T> Iterator for IterMut<'iter, T> {
     }
 }
 
-impl<T> Iterator for IntoIter<T> {
+impl<T: Scalar> Iterator for IntoIter<T> {
     type Item = (usize, usize, T);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -582,7 +582,7 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
-impl<T: Default + AddAssign> From<CooMatrix<T>> for DokMatrix<T> {
+impl<T: Scalar> From<CooMatrix<T>> for DokMatrix<T> {
     /// Conversion from COO format to DOK format.
     ///
     /// # Examples
@@ -612,7 +612,7 @@ impl<T: Default + AddAssign> From<CooMatrix<T>> for DokMatrix<T> {
     }
 }
 
-impl<T> From<CscMatrix<T>> for DokMatrix<T> {
+impl<T: Scalar> From<CscMatrix<T>> for DokMatrix<T> {
     /// Conversion from CSC format to DOK format.
     ///
     /// # Examples
@@ -632,7 +632,7 @@ impl<T> From<CscMatrix<T>> for DokMatrix<T> {
     }
 }
 
-impl<T> From<CsrMatrix<T>> for DokMatrix<T> {
+impl<T: Scalar> From<CsrMatrix<T>> for DokMatrix<T> {
     /// Conversion from CSR format to DOK format.
     ///
     /// # Examples
