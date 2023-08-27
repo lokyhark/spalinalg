@@ -470,7 +470,7 @@ impl<T> DokMatrix<T> {
     /// ];
     /// let matrix = DokMatrix::with_entries(1, 1, entries);
     /// let mut iter = matrix.iter();
-    /// assert_eq!(iter.next(), Some((&0, &0, &1.0)));
+    /// assert_eq!(iter.next(), Some((0, 0, &1.0)));
     /// assert!(iter.next().is_none());
     /// ```
     pub fn iter(&self) -> Iter<T> {
@@ -491,7 +491,7 @@ impl<T> DokMatrix<T> {
     /// ];
     /// let mut matrix = DokMatrix::with_entries(1, 1, entries);
     /// let mut iter = matrix.iter_mut();
-    /// assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
+    /// assert_eq!(iter.next(), Some((0, 0, &mut 1.0)));
     /// assert!(iter.next().is_none());
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<T> {
@@ -557,18 +557,18 @@ impl<T> IntoIterator for DokMatrix<T> {
 }
 
 impl<'iter, T> Iterator for Iter<'iter, T> {
-    type Item = (&'iter usize, &'iter usize, &'iter T);
+    type Item = (usize, usize, &'iter T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|((r, c), v)| (r, c, v))
+        self.iter.next().map(|((r, c), v)| (*r, *c, v))
     }
 }
 
 impl<'iter, T> Iterator for IterMut<'iter, T> {
-    type Item = (&'iter usize, &'iter usize, &'iter mut T);
+    type Item = (usize, usize, &'iter mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|((r, c), v)| (r, c, v))
+        self.iter.next().map(|((r, c), v)| (*r, *c, v))
     }
 }
 
@@ -849,7 +849,7 @@ mod tests {
         let entries = vec![(0, 0, 1.0)];
         let matrix = DokMatrix::with_entries(1, 1, entries);
         let mut iter = matrix.iter();
-        assert_eq!(iter.next(), Some((&0, &0, &1.0)));
+        assert_eq!(iter.next(), Some((0, 0, &1.0)));
         assert!(iter.next().is_none());
     }
 
@@ -858,7 +858,7 @@ mod tests {
         let entries = vec![(0, 0, 1.0)];
         let mut matrix = DokMatrix::with_entries(1, 1, entries);
         let mut iter = matrix.iter_mut();
-        assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
+        assert_eq!(iter.next(), Some((0, 0, &mut 1.0)));
         assert!(iter.next().is_none());
     }
 

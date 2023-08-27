@@ -459,8 +459,8 @@ impl<T> CooMatrix<T> {
     /// ];
     /// let matrix = CooMatrix::with_entries(2, 2, entries);
     /// let mut iter = matrix.iter();
-    /// assert_eq!(iter.next(), Some((&0, &0, &1.0)));
-    /// assert_eq!(iter.next(), Some((&1, &1, &2.0)));
+    /// assert_eq!(iter.next(), Some((0, 0, &1.0)));
+    /// assert_eq!(iter.next(), Some((1, 1, &2.0)));
     /// assert!(iter.next().is_none());
     /// ```
     pub fn iter(&self) -> Iter<T> {
@@ -482,8 +482,8 @@ impl<T> CooMatrix<T> {
     /// ];
     /// let mut matrix = CooMatrix::with_entries(2, 2, entries);
     /// let mut iter = matrix.iter_mut();
-    /// assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
-    /// assert_eq!(iter.next(), Some((&1, &1, &mut 2.0)));
+    /// assert_eq!(iter.next(), Some((0, 0, &mut 1.0)));
+    /// assert_eq!(iter.next(), Some((1, 1, &mut 2.0)));
     /// assert!(iter.next().is_none());
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<T> {
@@ -551,18 +551,18 @@ impl<T> IntoIterator for CooMatrix<T> {
 }
 
 impl<'iter, T> Iterator for Iter<'iter, T> {
-    type Item = (&'iter usize, &'iter usize, &'iter T);
+    type Item = (usize, usize, &'iter T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(r, c, v)| (r, c, v))
+        self.iter.next().map(|(r, c, v)| (*r, *c, v))
     }
 }
 
 impl<'iter, T> Iterator for IterMut<'iter, T> {
-    type Item = (&'iter usize, &'iter usize, &'iter mut T);
+    type Item = (usize, usize, &'iter mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(r, c, v)| (&*r, &*c, v))
+        self.iter.next().map(|(r, c, v)| (*r, *c, v))
     }
 }
 
@@ -848,9 +848,9 @@ mod tests {
         let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
         let matrix = CooMatrix::with_entries(2, 3, entries);
         let mut iter = matrix.iter();
-        assert_eq!(iter.next(), Some((&0, &0, &1.0)));
-        assert_eq!(iter.next(), Some((&1, &0, &2.0)));
-        assert_eq!(iter.next(), Some((&0, &2, &3.0)));
+        assert_eq!(iter.next(), Some((0, 0, &1.0)));
+        assert_eq!(iter.next(), Some((1, 0, &2.0)));
+        assert_eq!(iter.next(), Some((0, 2, &3.0)));
         assert!(iter.next().is_none());
     }
 
@@ -859,9 +859,9 @@ mod tests {
         let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
         let mut matrix = CooMatrix::with_entries(2, 3, entries);
         let mut iter = matrix.iter_mut();
-        assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
-        assert_eq!(iter.next(), Some((&1, &0, &mut 2.0)));
-        assert_eq!(iter.next(), Some((&0, &2, &mut 3.0)));
+        assert_eq!(iter.next(), Some((0, 0, &mut 1.0)));
+        assert_eq!(iter.next(), Some((1, 0, &mut 2.0)));
+        assert_eq!(iter.next(), Some((0, 2, &mut 3.0)));
         assert!(iter.next().is_none());
     }
 
