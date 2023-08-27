@@ -298,10 +298,10 @@ impl<T: Scalar> From<CooMatrix<T>> for CscMatrix<T> {
         let mut colind = vec![0; len];
         let mut rowval = vec![T::zero(); len];
         for (row, col, val) in coo.into_iter() {
-            let ptr = vec[row];
-            vec[row] += 1;
-            colind[ptr] = col;
-            rowval[ptr] = val;
+            let ptr = &mut vec[row];
+            colind[*ptr] = col;
+            rowval[*ptr] = val;
+            *ptr += 1
         }
 
         // Sum up duplicates
