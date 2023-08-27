@@ -594,6 +594,26 @@ impl<T: Scalar> From<CscMatrix<T>> for CooMatrix<T> {
     }
 }
 
+impl<T: Scalar> From<&CscMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSC format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CscMatrix};
+    ///
+    /// let csc = CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(&csc);
+    /// ```
+    fn from(csc: &CscMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csc.nrows(),
+            ncols: csc.ncols(),
+            entries: csc.iter().map(|(r, c, v)| (r, c, *v)).collect(),
+        }
+    }
+}
+
 impl<T: Scalar> From<CsrMatrix<T>> for CooMatrix<T> {
     /// Conversion from CSR format to COO format.
     ///
@@ -609,6 +629,25 @@ impl<T: Scalar> From<CsrMatrix<T>> for CooMatrix<T> {
             nrows: csr.nrows(),
             ncols: csr.ncols(),
             entries: csr.into_iter().collect(),
+        }
+    }
+}
+
+impl<T: Scalar> From<&CsrMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSR format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CsrMatrix};
+    ///
+    /// let csr = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(&csr);
+    fn from(csr: &CsrMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csr.nrows(),
+            ncols: csr.ncols(),
+            entries: csr.iter().map(|(r, c, v)| (r, c, *v)).collect(),
         }
     }
 }
@@ -631,6 +670,28 @@ impl<T: Scalar> From<DokMatrix<T>> for CooMatrix<T> {
             nrows: dok.nrows(),
             ncols: dok.ncols(),
             entries: dok.into_iter().collect(),
+        }
+    }
+}
+
+impl<T: Scalar> From<&DokMatrix<T>> for CooMatrix<T> {
+    /// Conversion from DOK format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, DokMatrix};
+    ///
+    /// let mut dok = DokMatrix::new(2, 2);
+    /// dok.insert(0, 0, 1.0);
+    /// dok.insert(1, 1, 2.0);
+    /// let coo = CooMatrix::from(&dok);
+    /// ```
+    fn from(dok: &DokMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: dok.nrows(),
+            ncols: dok.ncols(),
+            entries: dok.iter().map(|(r, c, v)| (r, c, *v)).collect(),
         }
     }
 }

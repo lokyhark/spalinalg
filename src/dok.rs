@@ -582,7 +582,7 @@ impl<T: Scalar> Iterator for IntoIter<T> {
     }
 }
 
-impl<T: Scalar> From<CooMatrix<T>> for DokMatrix<T> {
+impl<T: Scalar> From<&CooMatrix<T>> for DokMatrix<T> {
     /// Conversion from COO format to DOK format.
     ///
     /// # Examples
@@ -595,14 +595,14 @@ impl<T: Scalar> From<CooMatrix<T>> for DokMatrix<T> {
     ///     (1, 1, 2.0),
     /// ];
     /// let coo = CooMatrix::with_entries(2, 3, entries);
-    /// let dok = DokMatrix::from(coo);
+    /// let dok = DokMatrix::from(&coo);
     /// ```
-    fn from(coo: CooMatrix<T>) -> Self {
+    fn from(coo: &CooMatrix<T>) -> Self {
         let nrows = coo.nrows();
         let ncols = coo.ncols();
         let mut map = HashMap::with_capacity(coo.length());
-        for (row, col, value) in coo.into_iter() {
-            *map.entry((row, col)).or_default() += value;
+        for (row, col, value) in coo.iter() {
+            *map.entry((row, col)).or_default() += *value;
         }
         DokMatrix {
             nrows,
@@ -612,7 +612,13 @@ impl<T: Scalar> From<CooMatrix<T>> for DokMatrix<T> {
     }
 }
 
-impl<T: Scalar> From<CscMatrix<T>> for DokMatrix<T> {
+impl<T: Scalar> From<CooMatrix<T>> for DokMatrix<T> {
+    fn from(coo: CooMatrix<T>) -> Self {
+        Self::from(&coo)
+    }
+}
+
+impl<T: Scalar> From<&CscMatrix<T>> for DokMatrix<T> {
     /// Conversion from CSC format to DOK format.
     ///
     /// # Examples
@@ -621,18 +627,24 @@ impl<T: Scalar> From<CscMatrix<T>> for DokMatrix<T> {
     /// use spalinalg::{CscMatrix, DokMatrix};
     ///
     /// let csc = CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![0], vec![1.0]);
-    /// let dok = DokMatrix::from(csc);
+    /// let dok = DokMatrix::from(&csc);
     /// ```
-    fn from(csc: CscMatrix<T>) -> Self {
+    fn from(csc: &CscMatrix<T>) -> Self {
         DokMatrix {
             nrows: csc.nrows(),
             ncols: csc.ncols(),
-            entries: csc.into_iter().map(|(r, c, v)| ((r, c), v)).collect(),
+            entries: csc.iter().map(|(r, c, &v)| ((r, c), v)).collect(),
         }
     }
 }
 
-impl<T: Scalar> From<CsrMatrix<T>> for DokMatrix<T> {
+impl<T: Scalar> From<CscMatrix<T>> for DokMatrix<T> {
+    fn from(csc: CscMatrix<T>) -> Self {
+        Self::from(&csc)
+    }
+}
+
+impl<T: Scalar> From<&CsrMatrix<T>> for DokMatrix<T> {
     /// Conversion from CSR format to DOK format.
     ///
     /// # Examples
@@ -641,14 +653,20 @@ impl<T: Scalar> From<CsrMatrix<T>> for DokMatrix<T> {
     /// use spalinalg::{CsrMatrix, DokMatrix};
     ///
     /// let csr = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
-    /// let dok = DokMatrix::from(csr);
+    /// let dok = DokMatrix::from(&csr);
     /// ```
-    fn from(csr: CsrMatrix<T>) -> Self {
+    fn from(csr: &CsrMatrix<T>) -> Self {
         DokMatrix {
             nrows: csr.nrows(),
             ncols: csr.ncols(),
-            entries: csr.into_iter().map(|(r, c, v)| ((r, c), v)).collect(),
+            entries: csr.iter().map(|(r, c, &v)| ((r, c), v)).collect(),
         }
+    }
+}
+
+impl<T: Scalar> From<CsrMatrix<T>> for DokMatrix<T> {
+    fn from(csr: CsrMatrix<T>) -> Self {
+        Self::from(&csr)
     }
 }
 

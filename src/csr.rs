@@ -272,8 +272,8 @@ impl<T: Scalar> Iterator for IntoIter<T> {
     }
 }
 
-impl<T: Scalar> From<CooMatrix<T>> for CsrMatrix<T> {
-    fn from(coo: CooMatrix<T>) -> Self {
+impl<T: Scalar> From<&CooMatrix<T>> for CsrMatrix<T> {
+    fn from(coo: &CooMatrix<T>) -> Self {
         let nrows = coo.nrows();
         let ncols = coo.ncols();
         let len = coo.length();
@@ -297,10 +297,10 @@ impl<T: Scalar> From<CooMatrix<T>> for CsrMatrix<T> {
         let mut vec = colptr[..ncols].to_vec();
         let mut rowind = vec![0; len];
         let mut colval = vec![T::zero(); len];
-        for (row, col, val) in coo.into_iter() {
+        for (row, col, val) in coo.iter() {
             let ptr = &mut vec[col];
             rowind[*ptr] = row;
-            colval[*ptr] = val;
+            colval[*ptr] = *val;
             *ptr += 1
         }
 
@@ -386,8 +386,14 @@ impl<T: Scalar> From<CooMatrix<T>> for CsrMatrix<T> {
     }
 }
 
-impl<T: Scalar> From<CscMatrix<T>> for CsrMatrix<T> {
-    fn from(csc: CscMatrix<T>) -> Self {
+impl<T: Scalar> From<CooMatrix<T>> for CsrMatrix<T> {
+    fn from(coo: CooMatrix<T>) -> Self {
+        Self::from(&coo)
+    }
+}
+
+impl<T: Scalar> From<&CscMatrix<T>> for CsrMatrix<T> {
+    fn from(csc: &CscMatrix<T>) -> Self {
         let nrows = csc.nrows();
         let ncols = csc.ncols();
         let colptr = csc.colptr();
@@ -437,8 +443,14 @@ impl<T: Scalar> From<CscMatrix<T>> for CsrMatrix<T> {
     }
 }
 
-impl<T: Scalar> From<DokMatrix<T>> for CsrMatrix<T> {
-    fn from(dok: DokMatrix<T>) -> Self {
+impl<T: Scalar> From<CscMatrix<T>> for CsrMatrix<T> {
+    fn from(csc: CscMatrix<T>) -> Self {
+        Self::from(&csc)
+    }
+}
+
+impl<T: Scalar> From<&DokMatrix<T>> for CsrMatrix<T> {
+    fn from(dok: &DokMatrix<T>) -> Self {
         let nrows = dok.nrows();
         let ncols = dok.ncols();
         let nz = dok.length();
@@ -462,10 +474,10 @@ impl<T: Scalar> From<DokMatrix<T>> for CsrMatrix<T> {
         let mut vec = colptr[..ncols].to_vec();
         let mut rowind = vec![0; nz];
         let mut colval = vec![T::zero(); nz];
-        for (row, col, val) in dok.into_iter() {
+        for (row, col, val) in dok.iter() {
             let ptr = &mut vec[col];
             rowind[*ptr] = row;
-            colval[*ptr] = val;
+            colval[*ptr] = *val;
             *ptr += 1
         }
 
@@ -508,6 +520,12 @@ impl<T: Scalar> From<DokMatrix<T>> for CsrMatrix<T> {
             colind,
             values: rowval,
         }
+    }
+}
+
+impl<T: Scalar> From<DokMatrix<T>> for CsrMatrix<T> {
+    fn from(dok: DokMatrix<T>) -> Self {
+        Self::from(&dok)
     }
 }
 
