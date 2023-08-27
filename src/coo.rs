@@ -510,7 +510,12 @@ impl<T> Extend<(usize, usize, T)> for CooMatrix<T> {
     /// assert!(matrix.get(2).is_none())
     /// ```
     fn extend<I: IntoIterator<Item = (usize, usize, T)>>(&mut self, iter: I) {
-        self.entries.extend(iter)
+        let entries: Vec<_> = iter.into_iter().collect();
+        for (row, col, _) in &entries {
+            assert!(*row < self.nrows);
+            assert!(*col < self.ncols);
+        }
+        self.entries.extend(entries)
     }
 }
 
