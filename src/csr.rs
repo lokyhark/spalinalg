@@ -10,6 +10,24 @@ pub struct CsrMatrix<T> {
     values: Vec<T>,
 }
 
+/// Immutable compressed sparse column matrix entries iterator created by [`CsrMatrix::iter`] method.
+#[derive(Clone, Debug)]
+pub struct Iter<'iter, T> {
+    iter: std::vec::IntoIter<(usize, usize, &'iter T)>,
+}
+
+/// Mutable compressed sparse column matrix entries iterator created by [`CsrMatrix::iter_mut`] method.
+#[derive(Debug)]
+pub struct IterMut<'iter, T> {
+    iter: std::vec::IntoIter<(usize, usize, &'iter mut T)>,
+}
+
+/// Move compressed sparse column matrix entries iterator created by [`CsrMatrix::into_iter`] method.
+#[derive(Debug)]
+pub struct IntoIter<T> {
+    iter: std::vec::IntoIter<(usize, usize, T)>,
+}
+
 impl<T> CsrMatrix<T> {
     pub fn new(
         nrows: usize,
@@ -133,6 +151,117 @@ impl<T> CsrMatrix<T> {
     /// ```
     pub fn nnz(&self) -> usize {
         *self.rowptr.last().unwrap()
+    }
+
+    /// Returns an iterator over matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CsrMatrix;
+    ///
+    /// let matrix = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let mut iter = matrix.iter();
+    /// assert_eq!(iter.next(), Some((0, 0, &1.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
+    pub fn iter(&self) -> Iter<T> {
+        let mut vec = Vec::with_capacity(self.nnz());
+        let mut values = self.values.iter();
+        for row in 0..self.nrows {
+            for ptr in self.rowptr[row]..self.rowptr[row + 1] {
+                let col = self.colind[ptr];
+                let val = values.next().unwrap();
+                vec.push((row, col, val));
+            }
+        }
+        Iter {
+            iter: vec.into_iter(),
+        }
+    }
+
+    /// Returns a mutable iterator over matrix entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CsrMatrix;
+    ///
+    /// let mut matrix = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let mut iter = matrix.iter_mut();
+    /// assert_eq!(iter.next(), Some((0, 0, &mut 1.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        let mut vec = Vec::with_capacity(self.nnz());
+        let mut values = self.values.iter_mut();
+        for row in 0..self.ncols {
+            for ptr in self.rowptr[row]..self.rowptr[row + 1] {
+                let col = self.colind[ptr];
+                let val = values.next().unwrap();
+                vec.push((row, col, val));
+            }
+        }
+        IterMut {
+            iter: vec.into_iter(),
+        }
+    }
+}
+
+impl<T> IntoIterator for CsrMatrix<T> {
+    type Item = (usize, usize, T);
+
+    type IntoIter = IntoIter<T>;
+
+    /// Turns compressed sparse column matrix into iterator over entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CsrMatrix;
+    ///
+    /// let matrix = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let mut iter = matrix.into_iter();
+    /// assert_eq!(iter.next(), Some((0, 0, 1.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
+    fn into_iter(self) -> Self::IntoIter {
+        let mut vec = Vec::with_capacity(self.nnz());
+        let mut values = self.values.into_iter();
+        for row in 0..self.nrows {
+            for ptr in self.rowptr[row]..self.rowptr[row + 1] {
+                let col = self.colind[ptr];
+                let val = values.next().unwrap();
+                vec.push((row, col, val));
+            }
+        }
+        IntoIter {
+            iter: vec.into_iter(),
+        }
+    }
+}
+
+impl<'iter, T> Iterator for Iter<'iter, T> {
+    type Item = (usize, usize, &'iter T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+impl<'iter, T> Iterator for IterMut<'iter, T> {
+    type Item = (usize, usize, &'iter mut T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = (usize, usize, T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
     }
 }
 
