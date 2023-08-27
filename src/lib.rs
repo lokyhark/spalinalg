@@ -4,7 +4,7 @@ pub mod coo;
 pub mod csc;
 pub mod csr;
 pub mod dok;
-mod scalar;
+pub mod scalar;
 
 pub use coo::CooMatrix;
 pub use csc::CscMatrix;
