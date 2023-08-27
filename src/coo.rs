@@ -1,5 +1,7 @@
 //! Coordinate format module.
 
+use crate::DokMatrix;
+
 /// Coordinate (COO) format sparse matrix.
 ///
 /// # Format
@@ -569,6 +571,24 @@ impl<T> Iterator for IntoIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
+    }
+}
+
+impl<T> From<DokMatrix<T>> for CooMatrix<T> {
+    /// Conversion from DOK format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, DokMatrix};
+    ///
+    /// let mut dok = DokMatrix::new(2, 2);
+    /// dok.insert(0, 0, 1.0);
+    /// dok.insert(1, 1, 2.0);
+    /// let coo = CooMatrix::from(dok);
+    /// ```
+    fn from(dok: DokMatrix<T>) -> Self {
+        CooMatrix::with_entries(dok.nrows(), dok.ncols(), dok)
     }
 }
 
