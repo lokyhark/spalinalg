@@ -1,5 +1,7 @@
 //! Coordinate format module.
 
+use crate::{scalar::Scalar, CscMatrix, CsrMatrix, DokMatrix};
+
 /// Coordinate (COO) format sparse matrix.
 ///
 /// # Format
@@ -45,7 +47,7 @@
 /// - Mutable iterator [`CooMatrix::iter_mut`]
 /// - Move iterator [`CooMatrix::into_iter`]
 #[derive(Clone, Debug)]
-pub struct CooMatrix<T> {
+pub struct CooMatrix<T: Scalar> {
     nrows: usize,
     ncols: usize,
     entries: Vec<(usize, usize, T)>,
@@ -69,7 +71,7 @@ pub struct IntoIter<T> {
     iter: std::vec::IntoIter<(usize, usize, T)>,
 }
 
-impl<T> CooMatrix<T> {
+impl<T: Scalar> CooMatrix<T> {
     /// Creates a new coordinate matrix with `nrows` rows and `ncols` columns.
     ///
     /// # Properties
@@ -457,8 +459,8 @@ impl<T> CooMatrix<T> {
     /// ];
     /// let matrix = CooMatrix::with_entries(2, 2, entries);
     /// let mut iter = matrix.iter();
-    /// assert_eq!(iter.next(), Some((&0, &0, &1.0)));
-    /// assert_eq!(iter.next(), Some((&1, &1, &2.0)));
+    /// assert_eq!(iter.next(), Some((0, 0, &1.0)));
+    /// assert_eq!(iter.next(), Some((1, 1, &2.0)));
     /// assert!(iter.next().is_none());
     /// ```
     pub fn iter(&self) -> Iter<T> {
@@ -480,8 +482,8 @@ impl<T> CooMatrix<T> {
     /// ];
     /// let mut matrix = CooMatrix::with_entries(2, 2, entries);
     /// let mut iter = matrix.iter_mut();
-    /// assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
-    /// assert_eq!(iter.next(), Some((&1, &1, &mut 2.0)));
+    /// assert_eq!(iter.next(), Some((0, 0, &mut 1.0)));
+    /// assert_eq!(iter.next(), Some((1, 1, &mut 2.0)));
     /// assert!(iter.next().is_none());
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<T> {
@@ -491,7 +493,7 @@ impl<T> CooMatrix<T> {
     }
 }
 
-impl<T> Extend<(usize, usize, T)> for CooMatrix<T> {
+impl<T: Scalar> Extend<(usize, usize, T)> for CooMatrix<T> {
     /// Extends coordinate matrix entries.
     ///
     /// # Examples
@@ -519,7 +521,7 @@ impl<T> Extend<(usize, usize, T)> for CooMatrix<T> {
     }
 }
 
-impl<T> IntoIterator for CooMatrix<T> {
+impl<T: Scalar> IntoIterator for CooMatrix<T> {
     type Item = (usize, usize, T);
 
     type IntoIter = IntoIter<T>;
@@ -549,26 +551,148 @@ impl<T> IntoIterator for CooMatrix<T> {
 }
 
 impl<'iter, T> Iterator for Iter<'iter, T> {
-    type Item = (&'iter usize, &'iter usize, &'iter T);
+    type Item = (usize, usize, &'iter T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(r, c, v)| (r, c, v))
+        self.iter.next().map(|(r, c, v)| (*r, *c, v))
     }
 }
 
 impl<'iter, T> Iterator for IterMut<'iter, T> {
-    type Item = (&'iter usize, &'iter usize, &'iter mut T);
+    type Item = (usize, usize, &'iter mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(r, c, v)| (&*r, &*c, v))
+        self.iter.next().map(|(r, c, v)| (*r, *c, v))
     }
 }
 
-impl<T> Iterator for IntoIter<T> {
+impl<T: Scalar> Iterator for IntoIter<T> {
     type Item = (usize, usize, T);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
+    }
+}
+
+impl<T: Scalar> From<CscMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSC format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CscMatrix};
+    ///
+    /// let csc = CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(csc);
+    /// ```
+    fn from(csc: CscMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csc.nrows(),
+            ncols: csc.ncols(),
+            entries: csc.into_iter().collect(),
+        }
+    }
+}
+
+impl<T: Scalar> From<&CscMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSC format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CscMatrix};
+    ///
+    /// let csc = CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(&csc);
+    /// ```
+    fn from(csc: &CscMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csc.nrows(),
+            ncols: csc.ncols(),
+            entries: csc.iter().map(|(r, c, v)| (r, c, *v)).collect(),
+        }
+    }
+}
+
+impl<T: Scalar> From<CsrMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSR format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CsrMatrix};
+    ///
+    /// let csr = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(csr);
+    fn from(csr: CsrMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csr.nrows(),
+            ncols: csr.ncols(),
+            entries: csr.into_iter().collect(),
+        }
+    }
+}
+
+impl<T: Scalar> From<&CsrMatrix<T>> for CooMatrix<T> {
+    /// Conversion from CSR format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, CsrMatrix};
+    ///
+    /// let csr = CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![0], vec![1.0]);
+    /// let coo = CooMatrix::from(&csr);
+    fn from(csr: &CsrMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: csr.nrows(),
+            ncols: csr.ncols(),
+            entries: csr.iter().map(|(r, c, v)| (r, c, *v)).collect(),
+        }
+    }
+}
+
+impl<T: Scalar> From<DokMatrix<T>> for CooMatrix<T> {
+    /// Conversion from DOK format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, DokMatrix};
+    ///
+    /// let mut dok = DokMatrix::new(2, 2);
+    /// dok.insert(0, 0, 1.0);
+    /// dok.insert(1, 1, 2.0);
+    /// let coo = CooMatrix::from(dok);
+    /// ```
+    fn from(dok: DokMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: dok.nrows(),
+            ncols: dok.ncols(),
+            entries: dok.into_iter().collect(),
+        }
+    }
+}
+
+impl<T: Scalar> From<&DokMatrix<T>> for CooMatrix<T> {
+    /// Conversion from DOK format to COO format.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::{CooMatrix, DokMatrix};
+    ///
+    /// let mut dok = DokMatrix::new(2, 2);
+    /// dok.insert(0, 0, 1.0);
+    /// dok.insert(1, 1, 2.0);
+    /// let coo = CooMatrix::from(&dok);
+    /// ```
+    fn from(dok: &DokMatrix<T>) -> Self {
+        CooMatrix {
+            nrows: dok.nrows(),
+            ncols: dok.ncols(),
+            entries: dok.iter().map(|(r, c, v)| (r, c, *v)).collect(),
+        }
     }
 }
 
@@ -802,9 +926,9 @@ mod tests {
         let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
         let matrix = CooMatrix::with_entries(2, 3, entries);
         let mut iter = matrix.iter();
-        assert_eq!(iter.next(), Some((&0, &0, &1.0)));
-        assert_eq!(iter.next(), Some((&1, &0, &2.0)));
-        assert_eq!(iter.next(), Some((&0, &2, &3.0)));
+        assert_eq!(iter.next(), Some((0, 0, &1.0)));
+        assert_eq!(iter.next(), Some((1, 0, &2.0)));
+        assert_eq!(iter.next(), Some((0, 2, &3.0)));
         assert!(iter.next().is_none());
     }
 
@@ -813,9 +937,9 @@ mod tests {
         let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
         let mut matrix = CooMatrix::with_entries(2, 3, entries);
         let mut iter = matrix.iter_mut();
-        assert_eq!(iter.next(), Some((&0, &0, &mut 1.0)));
-        assert_eq!(iter.next(), Some((&1, &0, &mut 2.0)));
-        assert_eq!(iter.next(), Some((&0, &2, &mut 3.0)));
+        assert_eq!(iter.next(), Some((0, 0, &mut 1.0)));
+        assert_eq!(iter.next(), Some((1, 0, &mut 2.0)));
+        assert_eq!(iter.next(), Some((0, 2, &mut 3.0)));
         assert!(iter.next().is_none());
     }
 
