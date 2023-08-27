@@ -45,6 +45,11 @@ impl<T: Scalar> CsrMatrix<T> {
         assert!(rowptr[0] == 0);
         assert!(rowptr.windows(2).all(|ptr| ptr[0] <= ptr[1]));
         assert!(colind.iter().all(|col| (0..ncols).contains(col)));
+        for row in 0..nrows {
+            assert!(colind[rowptr[row]..rowptr[row + 1]]
+                .windows(2)
+                .all(|cols| cols[0] < cols[1]));
+        }
         Self {
             nrows,
             ncols,
@@ -299,6 +304,12 @@ mod tests {
     #[should_panic]
     fn new_invalid_rowind() {
         CsrMatrix::<f64>::new(2, 1, vec![0, 1, 1], vec![1], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_unsorted_colind() {
+        CsrMatrix::<f64>::new(2, 1, vec![0, 2, 2], vec![1, 0], vec![1.0, 2.0]);
     }
 
     #[test]

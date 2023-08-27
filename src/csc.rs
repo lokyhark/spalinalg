@@ -45,6 +45,11 @@ impl<T: Scalar> CscMatrix<T> {
         assert!(colptr[0] == 0);
         assert!(colptr.windows(2).all(|ptr| ptr[0] <= ptr[1]));
         assert!(rowind.iter().all(|row| (0..nrows).contains(row)));
+        for col in 0..ncols {
+            assert!(rowind[colptr[col]..colptr[col + 1]]
+                .windows(2)
+                .all(|rows| rows[0] < rows[1]));
+        }
         Self {
             nrows,
             ncols,
@@ -413,6 +418,12 @@ mod tests {
     #[should_panic]
     fn new_invalid_rowind() {
         CscMatrix::<f64>::new(1, 2, vec![0, 1, 1], vec![1], vec![1.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_unsorted_rowind() {
+        CscMatrix::<f64>::new(1, 2, vec![0, 2, 2], vec![1, 0], vec![1.0, 2.0]);
     }
 
     #[test]
