@@ -213,6 +213,68 @@ impl<T: Scalar> CsrMatrix<T> {
             iter: vec.into_iter(),
         }
     }
+
+    /// Returns the matrix transpose.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CsrMatrix;
+    ///
+    /// let mut matrix = CsrMatrix::<f64>::new(2, 2, vec![0, 2, 3], vec![0, 1, 1], vec![1.0, 2.0, 3.0]);
+    /// let transpose = matrix.transpose();
+    /// assert_eq!(transpose.rowptr(), &[0, 1, 3]);
+    /// assert_eq!(transpose.colind(), &[0, 0, 1]);
+    /// assert_eq!(transpose.values(), &[1.0, 2.0, 3.0]);
+    /// ```
+    pub fn transpose(&self) -> Self {
+        let nrows = self.nrows();
+        let ncols = self.ncols();
+        let nz = self.nnz();
+        let rowptr = self.rowptr();
+        let colind = self.colind();
+        let rowval = self.values();
+
+        // Count number of entries in each column
+        let mut vec = vec![0; ncols];
+        for row in 0..nrows {
+            for col in colind.iter().take(rowptr[row + 1]).skip(rowptr[row]) {
+                vec[*col] += 1;
+            }
+        }
+
+        // Construct column pointers
+        let mut colptr = Vec::with_capacity(ncols + 1);
+        let mut sum = 0;
+        colptr.push(0);
+        for value in vec {
+            sum += value;
+            colptr.push(sum);
+        }
+
+        // Construct column form
+        let mut vec = colptr[..ncols].to_vec();
+        let mut rowind = vec![0; nz];
+        let mut colval = vec![T::zero(); nz];
+        for row in 0..nrows {
+            for ptr in rowptr[row]..rowptr[row + 1] {
+                let col = colind[ptr];
+                let idx = &mut vec[col];
+                rowind[*idx] = row;
+                colval[*idx] = rowval[ptr];
+                *idx += 1;
+            }
+        }
+
+        // Construct matrix
+        Self {
+            nrows,
+            ncols,
+            rowptr: colptr,
+            colind: rowind,
+            values: colval,
+        }
+    }
 }
 
 impl<T: Scalar> IntoIterator for CsrMatrix<T> {

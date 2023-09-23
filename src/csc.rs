@@ -252,7 +252,7 @@ impl<T: Scalar> CscMatrix<T> {
             rowptr.push(sum);
         }
 
-        // Transpose
+        // Construct row form
         let mut vec = rowptr[..nrows].to_vec();
         let mut colind = vec![0; nz];
         let mut rowval = vec![T::zero(); nz];
@@ -267,7 +267,7 @@ impl<T: Scalar> CscMatrix<T> {
         }
 
         // Construct matrix
-        CscMatrix {
+        Self {
             nrows,
             ncols,
             colptr: rowptr,
