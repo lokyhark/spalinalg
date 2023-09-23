@@ -213,6 +213,68 @@ impl<T: Scalar> CscMatrix<T> {
             iter: vec.into_iter(),
         }
     }
+
+    /// Returns the matrix transpose.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CscMatrix;
+    ///
+    /// let mut matrix = CscMatrix::<f64>::new(2, 2, vec![0, 1, 3], vec![0, 0, 1], vec![1.0, 2.0, 3.0]);
+    /// let transpose = matrix.transpose();
+    /// assert_eq!(transpose.colptr(), &[0, 2, 3]);
+    /// assert_eq!(transpose.rowind(), &[0, 1, 1]);
+    /// assert_eq!(transpose.values(), &[1.0, 2.0, 3.0]);
+    /// ```
+    pub fn transpose(&self) -> Self {
+        let nrows = self.nrows();
+        let ncols = self.ncols();
+        let nz = self.nnz();
+        let rowind = self.rowind();
+        let colptr = self.colptr();
+        let colval = self.values();
+
+        // Count number of entries in each row
+        let mut vec = vec![0; nrows];
+        for col in 0..ncols {
+            for row in rowind.iter().take(colptr[col + 1]).skip(colptr[col]) {
+                vec[*row] += 1;
+            }
+        }
+
+        // Construct row pointers
+        let mut rowptr = Vec::with_capacity(nrows + 1);
+        let mut sum = 0;
+        rowptr.push(0);
+        for value in vec {
+            sum += value;
+            rowptr.push(sum);
+        }
+
+        // Transpose
+        let mut vec = rowptr[..nrows].to_vec();
+        let mut colind = vec![0; nz];
+        let mut rowval = vec![T::zero(); nz];
+        for col in 0..ncols {
+            for ptr in colptr[col]..colptr[col + 1] {
+                let row = rowind[ptr];
+                let idx = &mut vec[row];
+                colind[*idx] = col;
+                rowval[*idx] = colval[ptr];
+                *idx += 1;
+            }
+        }
+
+        // Construct matrix
+        CscMatrix {
+            nrows,
+            ncols,
+            colptr: rowptr,
+            rowind: colind,
+            values: rowval,
+        }
+    }
 }
 
 impl<T: Scalar> IntoIterator for CscMatrix<T> {
