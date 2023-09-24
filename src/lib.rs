@@ -1,5 +1,7 @@
 //! Sparse Linear Algebra Library.
 
+#![allow(clippy::needless_range_loop)]
+
 pub mod coo;
 pub mod csc;
 pub mod csr;

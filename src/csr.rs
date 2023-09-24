@@ -238,8 +238,9 @@ impl<T: Scalar> CsrMatrix<T> {
         // Count number of entries in each column
         let mut vec = vec![0; ncols];
         for row in 0..nrows {
-            for col in colind.iter().take(rowptr[row + 1]).skip(rowptr[row]) {
-                vec[*col] += 1;
+            for ptr in rowptr[row]..rowptr[row + 1] {
+                let col = colind[ptr];
+                vec[col] += 1;
             }
         }
 
@@ -409,8 +410,9 @@ impl<T: Scalar> From<&CooMatrix<T>> for CsrMatrix<T> {
         // Count number of entries in each row
         let mut vec = vec![0; nrows];
         for col in 0..ncols {
-            for row in rowind.iter().take(colptr[col + 1]).skip(colptr[col]) {
-                vec[*row] += 1;
+            for ptr in colptr[col]..colptr[col + 1] {
+                let row = rowind[ptr];
+                vec[row] += 1
             }
         }
 
@@ -466,8 +468,9 @@ impl<T: Scalar> From<&CscMatrix<T>> for CsrMatrix<T> {
         // Count number of entries in each row
         let mut vec = vec![0; nrows];
         for col in 0..ncols {
-            for row in rowind.iter().take(colptr[col + 1]).skip(colptr[col]) {
-                vec[*row] += 1;
+            for ptr in colptr[col]..colptr[col + 1] {
+                let row = rowind[ptr];
+                vec[row] += 1;
             }
         }
 
@@ -546,8 +549,9 @@ impl<T: Scalar> From<&DokMatrix<T>> for CsrMatrix<T> {
         // Count number of entries in each row
         let mut vec = vec![0; nrows];
         for col in 0..ncols {
-            for row in rowind.iter().take(colptr[col + 1]).skip(colptr[col]) {
-                vec[*row] += 1;
+            for ptr in colptr[col]..colptr[col + 1] {
+                let row = rowind[ptr];
+                vec[row] += 1;
             }
         }
 
