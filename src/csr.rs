@@ -601,6 +601,7 @@ impl<T: Scalar> Mul for &CsrMatrix<T> {
     type Output = CsrMatrix<T>;
 
     fn mul(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.ncols(), rhs.nrows());
         // Transpose inputs
         let (lhs, rhs) = (rhs.transpose(), self.transpose());
 
