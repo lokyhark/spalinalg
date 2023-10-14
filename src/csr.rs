@@ -1,5 +1,7 @@
 //! Compressed sparse row format module.
 
+use std::ops::Mul;
+
 use crate::{scalar::Scalar, CooMatrix, CscMatrix, DokMatrix};
 
 /// Compressed sparse row (CSR) format matrix.
@@ -269,8 +271,8 @@ impl<T: Scalar> CsrMatrix<T> {
 
         // Construct matrix
         Self {
-            nrows,
-            ncols,
+            nrows: ncols,
+            ncols: nrows,
             rowptr: colptr,
             colind: rowind,
             values: colval,
@@ -595,6 +597,62 @@ impl<T: Scalar> From<DokMatrix<T>> for CsrMatrix<T> {
     }
 }
 
+impl<T: Scalar> Mul for &CsrMatrix<T> {
+    type Output = CsrMatrix<T>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        // Transpose inputs
+        let (lhs, rhs) = (rhs.transpose(), self.transpose());
+
+        // Allocate output
+        let mut rowptr = Vec::with_capacity(lhs.nrows() + 1);
+        let cap = lhs.nnz() + rhs.nnz();
+        let mut colind = Vec::with_capacity(cap);
+        let mut values = Vec::with_capacity(cap);
+
+        // Allocate workspace
+        let mut set = vec![0; rhs.ncols()];
+        let mut vec = vec![T::zero(); rhs.ncols()];
+
+        // Multiply
+        let mut nz = 0;
+        for row in 0..lhs.nrows() {
+            rowptr.push(nz);
+            for lhsptr in lhs.rowptr[row]..lhs.rowptr[row + 1] {
+                let lhscol = lhs.colind[lhsptr];
+                for rhsptr in rhs.rowptr[lhscol]..rhs.rowptr[lhscol + 1] {
+                    let rhscol = rhs.colind[rhsptr];
+                    if set[rhscol] < row + 1 {
+                        set[rhscol] = row + 1;
+                        colind.push(rhscol);
+                        vec[rhscol] = rhs.values[rhsptr] * lhs.values[lhsptr];
+                        nz += 1;
+                    } else {
+                        vec[rhscol] += rhs.values[rhsptr] * lhs.values[lhsptr];
+                    }
+                }
+            }
+            for ptr in rowptr[row]..nz {
+                let value = vec[colind[ptr]];
+                values.push(value)
+            }
+        }
+        rowptr.push(nz);
+
+        // Construct matrix
+        let output = CsrMatrix {
+            nrows: lhs.nrows(),
+            ncols: rhs.ncols(),
+            rowptr,
+            colind,
+            values,
+        };
+
+        // Transpose output
+        output.transpose()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -686,5 +744,32 @@ mod tests {
         assert_eq!(csr.rowptr, [0, 3, 4]);
         assert_eq!(csr.colind, [0, 1, 2, 2]);
         assert_eq!(csr.values, [3.0, 3.0, 4.0, 5.0]);
+    }
+
+    #[test]
+    fn mul() {
+        let lhs = CsrMatrix::new(
+            5,
+            3,
+            vec![0, 1, 3, 4, 5, 6],
+            vec![0, 0, 2, 2, 1, 0],
+            vec![1.0, -5.0, 7.0, 2.0, 3.0, 4.0],
+        );
+        let rhs = CsrMatrix::new(
+            3,
+            4,
+            vec![0, 2, 4, 6],
+            vec![0, 2, 0, 3, 0, 1],
+            vec![1.0, -2.0, -5.0, 4.0, 7.0, 3.0],
+        );
+        let mat = &lhs * &rhs;
+        assert_eq!(mat.nrows, 5);
+        assert_eq!(mat.ncols, 4);
+        assert_eq!(mat.rowptr, [0, 2, 5, 7, 9, 11]);
+        assert_eq!(mat.colind, [0, 2, 0, 1, 2, 0, 1, 0, 3, 0, 2]);
+        assert_eq!(
+            mat.values,
+            [1.0, -2.0, 44.0, 21.0, 10.0, 14.0, 6.0, -15.0, 12.0, 4.0, -8.0]
+        );
     }
 }
