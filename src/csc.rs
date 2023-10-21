@@ -40,6 +40,44 @@ pub struct IntoIter<T> {
 }
 
 impl<T: Scalar> CscMatrix<T> {
+    /// Creates a new compressed sparse column matrix.
+    ///
+    /// # Parameters
+    ///
+    /// - `nrows`: number of rows
+    /// - `ncols`: number of columns
+    /// - `colptr`: column pointers of size `ncols + 1`
+    /// - `rowind`: row indices of matrix entries
+    /// - `values`: values of matrix entries
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CscMatrix;
+    /// // Simple 2 by 3 matrix
+    /// // | 1 0 0 |
+    /// // | 0 2 3 |
+    /// let matrix = CscMatrix::new(
+    ///     2, // number of rows
+    ///     3, // number of columns
+    ///     vec![0, 1, 2, 3], // column pointers of size 4 = number of columns + 1
+    ///     vec![0, 1, 1], // row indices of entries
+    ///     vec![1.0, 2.0, 3.0], // values of entries
+    /// );
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - `nrows < 1`,
+    /// - `ncols < 1`,
+    /// - `colptr.len() != ncols + 1`,
+    /// - `colptr[0] != 0`,
+    /// - `rowind.len() != colptr[ncols]`
+    /// - `values.len() != colptr[ncols]`
+    /// - `colptr` is unsorted
+    /// - `rowind` is not column sorted
+    /// - `rowind` has invalid column index ∉ `0..nrows`
     pub fn new(
         nrows: usize,
         ncols: usize,
@@ -50,8 +88,9 @@ impl<T: Scalar> CscMatrix<T> {
         assert!(nrows > 0);
         assert!(ncols > 0);
         assert!(colptr.len() == ncols + 1);
-        assert!(rowind.len() == values.len());
-        assert!(colptr[0] == 0);
+        assert_eq!(colptr[0], 0);
+        assert_eq!(rowind.len(), colptr[ncols]);
+        assert_eq!(values.len(), colptr[ncols]);
         assert!(colptr.windows(2).all(|ptr| ptr[0] <= ptr[1]));
         assert!(rowind.iter().all(|row| (0..nrows).contains(row)));
         for col in 0..ncols {
