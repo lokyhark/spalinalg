@@ -1,5 +1,7 @@
 //! Coordinate format module.
 
+use std::ops::{Add, Neg, Sub};
+
 use crate::{scalar::Scalar, CscMatrix, CsrMatrix, DokMatrix};
 
 /// Coordinate (COO) format sparse matrix.
@@ -696,6 +698,61 @@ impl<T: Scalar> From<&DokMatrix<T>> for CooMatrix<T> {
     }
 }
 
+impl<T: Scalar> Add for &CooMatrix<T> {
+    type Output = CooMatrix<T>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.nrows(), rhs.nrows());
+        assert_eq!(self.ncols(), rhs.ncols());
+
+        let entries: Vec<_> = self
+            .entries
+            .iter()
+            .chain(rhs.entries.iter())
+            .copied()
+            .collect();
+        CooMatrix {
+            nrows: self.nrows(),
+            ncols: self.ncols(),
+            entries,
+        }
+    }
+}
+
+impl<T: Scalar> Sub for &CooMatrix<T> {
+    type Output = CooMatrix<T>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.nrows(), rhs.nrows());
+        assert_eq!(self.ncols(), rhs.ncols());
+
+        let entries: Vec<_> = self
+            .entries
+            .iter()
+            .copied()
+            .chain(rhs.entries.iter().map(|&(r, c, v)| (r, c, -v)))
+            .collect();
+        CooMatrix {
+            nrows: self.nrows(),
+            ncols: self.ncols(),
+            entries,
+        }
+    }
+}
+
+impl<T: Scalar> Neg for &CooMatrix<T> {
+    type Output = CooMatrix<T>;
+
+    fn neg(self) -> Self::Output {
+        let entries: Vec<_> = self.entries.iter().map(|&(r, c, v)| (r, c, -v)).collect();
+        CooMatrix {
+            nrows: self.nrows(),
+            ncols: self.ncols(),
+            entries,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -964,6 +1021,51 @@ mod tests {
         assert_eq!(iter.next(), Some((0, 0, 1.0)));
         assert_eq!(iter.next(), Some((1, 0, 2.0)));
         assert_eq!(iter.next(), Some((0, 2, 3.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn add() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let lhs = CooMatrix::with_entries(2, 3, entries);
+        let entries = vec![(0, 0, 2.0), (1, 1, 4.0), (1, 2, 6.0)];
+        let rhs = CooMatrix::with_entries(2, 3, entries);
+        let mat = &lhs + &rhs;
+        let mut iter = mat.into_iter();
+        assert_eq!(iter.next(), Some((0, 0, 1.0)));
+        assert_eq!(iter.next(), Some((1, 0, 2.0)));
+        assert_eq!(iter.next(), Some((0, 2, 3.0)));
+        assert_eq!(iter.next(), Some((0, 0, 2.0)));
+        assert_eq!(iter.next(), Some((1, 1, 4.0)));
+        assert_eq!(iter.next(), Some((1, 2, 6.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn sub() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let lhs = CooMatrix::with_entries(2, 3, entries);
+        let entries = vec![(0, 0, 2.0), (1, 1, 4.0), (1, 2, 6.0)];
+        let rhs = CooMatrix::with_entries(2, 3, entries);
+        let mat = &lhs - &rhs;
+        let mut iter = mat.into_iter();
+        assert_eq!(iter.next(), Some((0, 0, 1.0)));
+        assert_eq!(iter.next(), Some((1, 0, 2.0)));
+        assert_eq!(iter.next(), Some((0, 2, 3.0)));
+        assert_eq!(iter.next(), Some((0, 0, -2.0)));
+        assert_eq!(iter.next(), Some((1, 1, -4.0)));
+        assert_eq!(iter.next(), Some((1, 2, -6.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn neg() {
+        let entries = vec![(0, 0, 1.0), (1, 0, 2.0), (0, 2, 3.0)];
+        let mat = -&CooMatrix::with_entries(2, 3, entries);
+        let mut iter = mat.into_iter();
+        assert_eq!(iter.next(), Some((0, 0, -1.0)));
+        assert_eq!(iter.next(), Some((1, 0, -2.0)));
+        assert_eq!(iter.next(), Some((0, 2, -3.0)));
         assert!(iter.next().is_none());
     }
 }
