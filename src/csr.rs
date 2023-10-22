@@ -13,10 +13,7 @@ pub struct CsrMatrix<T: Scalar> {
 }
 
 // Unary / Binary operators
-mod add;
-mod mul;
-mod neg;
-mod sub;
+mod ops;
 
 // Conversions
 mod conv;
