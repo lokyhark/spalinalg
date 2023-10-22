@@ -1,6 +1,9 @@
 //! Dictionnary of Keys format module.
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    ops::{Add, Neg, Sub},
+};
 
 use crate::{scalar::Scalar, CooMatrix, CscMatrix, CsrMatrix};
 
@@ -664,6 +667,55 @@ impl<T: Scalar> From<&CsrMatrix<T>> for DokMatrix<T> {
     }
 }
 
+impl<T: Scalar> Add for &DokMatrix<T> {
+    type Output = DokMatrix<T>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut entries = self.entries.clone();
+        for (&(row, col), &val) in rhs.entries.iter() {
+            entries.entry((row, col)).or_default().add_assign(val);
+        }
+        DokMatrix {
+            nrows: self.nrows(),
+            ncols: self.ncols(),
+            entries,
+        }
+    }
+}
+
+impl<T: Scalar> Sub for &DokMatrix<T> {
+    type Output = DokMatrix<T>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut entries = self.entries.clone();
+        for (&(row, col), &val) in rhs.entries.iter() {
+            entries.entry((row, col)).or_default().sub_assign(val);
+        }
+        DokMatrix {
+            nrows: self.nrows(),
+            ncols: self.ncols(),
+            entries,
+        }
+    }
+}
+
+impl<T: Scalar> Neg for &DokMatrix<T> {
+    type Output = DokMatrix<T>;
+
+    fn neg(self) -> Self::Output {
+        let entries: HashMap<_, _> = self
+            .entries
+            .iter()
+            .map(|(&(row, col), &val)| ((row, col), -val))
+            .collect();
+        DokMatrix {
+            nrows: self.nrows(),
+            ncols: self.ncols(),
+            entries,
+        }
+    }
+}
+
 impl<T: Scalar> From<CsrMatrix<T>> for DokMatrix<T> {
     fn from(csr: CsrMatrix<T>) -> Self {
         Self::from(&csr)
@@ -970,6 +1022,39 @@ mod tests {
         let matrix = DokMatrix::with_entries(1, 1, entries);
         let mut iter = matrix.into_iter();
         assert_eq!(iter.next(), Some((0, 0, 1.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn add() {
+        let entries = vec![(0, 0, 1.0)];
+        let lhs = DokMatrix::with_entries(1, 1, entries);
+        let entries = vec![(0, 0, 2.0)];
+        let rhs = DokMatrix::with_entries(1, 1, entries);
+        let matrix = &lhs + &rhs;
+        let mut iter = matrix.into_iter();
+        assert_eq!(iter.next(), Some((0, 0, 3.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn sub() {
+        let entries = vec![(0, 0, 1.0)];
+        let lhs = DokMatrix::with_entries(1, 1, entries);
+        let entries = vec![(0, 0, 2.0)];
+        let rhs = DokMatrix::with_entries(1, 1, entries);
+        let matrix = &lhs - &rhs;
+        let mut iter = matrix.into_iter();
+        assert_eq!(iter.next(), Some((0, 0, -1.0)));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn neg() {
+        let entries = vec![(0, 0, 1.0)];
+        let matrix = -&DokMatrix::with_entries(1, 1, entries);
+        let mut iter = matrix.into_iter();
+        assert_eq!(iter.next(), Some((0, 0, -1.0)));
         assert!(iter.next().is_none());
     }
 }
