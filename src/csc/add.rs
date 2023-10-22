@@ -19,8 +19,8 @@ impl<T: Scalar> Add for &CscMatrix<T> {
         let mut values = Vec::with_capacity(cap);
 
         // Allocate workspace
-        let mut set = vec![0; lhs.ncols()];
-        let mut vec = vec![T::zero(); lhs.ncols()];
+        let mut set = vec![0; lhs.nrows()];
+        let mut vec = vec![T::zero(); lhs.nrows()];
 
         // Addition
         let mut nz = 0;
