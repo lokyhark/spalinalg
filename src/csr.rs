@@ -109,9 +109,9 @@ impl<T: Scalar> CsrMatrix<T> {
     /// # Examples
     ///
     /// ```
-    /// use spalinalg::CscMatrix;
+    /// use spalinalg::CsrMatrix;
     ///
-    /// let matrix = CscMatrix::<f64>::eye(2);
+    /// let matrix = CsrMatrix::<f64>::eye(2);
     /// ```
     ///
     /// # Panics

@@ -112,6 +112,28 @@ impl<T: Scalar> DokMatrix<T> {
         }
     }
 
+    /// Creates a `size` by `size` identity matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::DokMatrix;
+    ///
+    /// let matrix = DokMatrix::<f64>::eye(2);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size == 0`.
+    pub fn eye(size: usize) -> Self {
+        assert!(size > 0);
+        Self {
+            nrows: size,
+            ncols: size,
+            entries: (0..size).map(|i| ((i, i), T::one())).collect(),
+        }
+    }
+
     /// Creates a new dictionnary of keys matrix with `nrows` rows, `ncols` columns and specified `capacity`.
     ///
     /// # Properties
