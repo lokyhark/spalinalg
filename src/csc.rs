@@ -104,6 +104,30 @@ impl<T: Scalar> CscMatrix<T> {
         }
     }
 
+    /// Creates a `size` by `size` identity matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CscMatrix;
+    ///
+    /// let matrix = CscMatrix::<f64>::eye(2);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size == 0`.
+    pub fn eye(size: usize) -> Self {
+        assert!(size > 0);
+        Self {
+            nrows: size,
+            ncols: size,
+            colptr: (0..=size).collect(),
+            rowind: (0..size).collect(),
+            values: vec![T::one(); size],
+        }
+    }
+
     /// Returns number of rows of the matrix.
     ///
     /// # Examples
