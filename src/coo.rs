@@ -110,6 +110,16 @@ impl<T: Scalar> CooMatrix<T> {
         }
     }
 
+    /// Creates a `size` by `size` identity matrix.
+    pub fn eye(size: usize) -> Self {
+        assert!(size > 0);
+        Self {
+            nrows: size,
+            ncols: size,
+            entries: (0..size).map(|i| (i, i, T::one())).collect(),
+        }
+    }
+
     /// Creates a new coordinate matrix with `nrows` rows, `ncols` columns and specified `capacity`.
     ///
     /// # Properties
