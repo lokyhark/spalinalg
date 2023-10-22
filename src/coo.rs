@@ -110,6 +110,28 @@ impl<T: Scalar> CooMatrix<T> {
         }
     }
 
+    /// Creates a `size` by `size` identity matrix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CooMatrix;
+    ///
+    /// let matrix = CooMatrix::<f64>::eye(2);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size == 0`.
+    pub fn eye(size: usize) -> Self {
+        assert!(size > 0);
+        Self {
+            nrows: size,
+            ncols: size,
+            entries: (0..size).map(|i| (i, i, T::one())).collect(),
+        }
+    }
+
     /// Creates a new coordinate matrix with `nrows` rows, `ncols` columns and specified `capacity`.
     ///
     /// # Properties
