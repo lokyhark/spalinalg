@@ -28,6 +28,7 @@ use crate::{scalar::Scalar, CscMatrix, CsrMatrix, DokMatrix};
 ///
 /// - Create an empty coordinate matrix [`CooMatrix::new`]
 /// - Create an empty matrix and reserve capacity entries [`CooMatrix::with_capacity`]
+/// - Create an identity matrix [`CooMatrix::eye`]
 /// - Create a matrix from entries [`CooMatrix::with_entries`]
 /// - Create a matrix from triplets [`CooMatrix::with_triplets`]
 ///
