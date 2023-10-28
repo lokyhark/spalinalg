@@ -3,6 +3,65 @@
 use crate::scalar::Scalar;
 
 /// Compressed sparse column (CSC) format matrix.
+///
+/// # Format
+///
+/// The compressed sparse column format stores three arrays :
+/// - A column pointer `colptr` array (size `ncols + 1`)
+/// - A row indices `rowind` array (size `nnz`)
+/// - A value `values` array (size `nnz`)
+///
+/// # Properties
+///
+/// The compressed sparse column is intended for standard arithmetic operation
+/// (add, sub, mul) and for matrix factorization (chol, qr, lu).
+///
+/// The CSC format do not provide methods for adding/removing entries.
+///
+/// # Methods
+///
+/// ## Constructors
+///
+/// - Create a csc matrix with specified entries [`CscMatrix::new`]
+/// - Create an identity csc matrix [`CscMatrix::eye`]
+///
+/// ## Arithmetic operations
+/// - [Addition](#impl-Add<%26CscMatrix<T>>-for-%26CscMatrix<T>)
+/// - [Substraction](#impl-Sub<%26CscMatrix<T>>-for-%26CscMatrix<T>)
+/// - [Multiplication](#impl-Mul<%26CscMatrix<T>>-for-%26CscMatrix<T>)
+/// - [Negation](#impl-Neg-for-%26CscMatrix<T>)
+///
+/// # Examples
+///
+/// ```
+/// use spalinalg::CscMatrix;
+///
+/// // Create the matrix A.
+/// //     | 0 0 1 |
+/// // A = | 2 0 0 |
+/// //     | 0 3 4 |
+/// let colptr = vec![0, 1, 2, 4];
+/// let rowind = vec![1, 2, 0, 2];
+/// let values = vec![2.0, 3.0, 1.0, 4.0];
+/// let matrix = CscMatrix::new(3, 3, colptr, rowind, values);
+///
+/// // Iterate over matrix entries
+/// let colptr = matrix.colptr();
+/// let rowind = matrix.rowind();
+/// let values = matrix.values();
+/// for col in 0..matrix.ncols() {
+///     for ptr in colptr[col]..colptr[col+1] {
+///         let row = rowind[ptr];
+///         let val = values[ptr];
+///     }
+/// }
+///
+/// // Transpose
+/// let transpose = matrix.transpose();
+///
+/// // Multiplication
+/// let mult = &matrix * &transpose;
+/// ```
 #[derive(Debug)]
 pub struct CscMatrix<T: Scalar> {
     nrows: usize,
