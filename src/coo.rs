@@ -516,6 +516,33 @@ impl<T: Scalar> CooMatrix<T> {
             iter: self.entries.iter_mut(),
         }
     }
+
+    /// Returns the matrix transpose.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CooMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 0, 2.0),
+    /// ];
+    /// let mut matrix = CooMatrix::with_entries(2, 2, entries);
+    /// let transpose = matrix.transpose();
+    /// let mut iter = transpose.iter();
+    /// assert_eq!(iter.next(), Some((0, 0, &1.0)));
+    /// assert_eq!(iter.next(), Some((0, 1, &2.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
+    pub fn transpose(&self) -> Self {
+        let entries = self.entries.iter().map(|&(r, c, v)| (c, r, v)).collect();
+        Self {
+            nrows: self.ncols(),
+            ncols: self.nrows(),
+            entries,
+        }
+    }
 }
 
 impl<T: Scalar> Extend<(usize, usize, T)> for CooMatrix<T> {
