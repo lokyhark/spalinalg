@@ -28,6 +28,7 @@ use crate::{scalar::Scalar, CscMatrix, CsrMatrix, DokMatrix};
 ///
 /// - Create an empty coordinate matrix [`CooMatrix::new`]
 /// - Create an empty matrix and reserve capacity entries [`CooMatrix::with_capacity`]
+/// - Create an identity matrix [`CooMatrix::eye`]
 /// - Create a matrix from entries [`CooMatrix::with_entries`]
 /// - Create a matrix from triplets [`CooMatrix::with_triplets`]
 ///
@@ -513,6 +514,33 @@ impl<T: Scalar> CooMatrix<T> {
     pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
             iter: self.entries.iter_mut(),
+        }
+    }
+
+    /// Returns the matrix transpose.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spalinalg::CooMatrix;
+    ///
+    /// let entries = vec![
+    ///     (0, 0, 1.0),
+    ///     (1, 0, 2.0),
+    /// ];
+    /// let mut matrix = CooMatrix::with_entries(2, 2, entries);
+    /// let transpose = matrix.transpose();
+    /// let mut iter = transpose.iter();
+    /// assert_eq!(iter.next(), Some((0, 0, &1.0)));
+    /// assert_eq!(iter.next(), Some((0, 1, &2.0)));
+    /// assert!(iter.next().is_none());
+    /// ```
+    pub fn transpose(&self) -> Self {
+        let entries = self.entries.iter().map(|&(r, c, v)| (c, r, v)).collect();
+        Self {
+            nrows: self.ncols(),
+            ncols: self.nrows(),
+            entries,
         }
     }
 }

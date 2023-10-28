@@ -3,6 +3,65 @@
 use crate::scalar::Scalar;
 
 /// Compressed sparse row (CSR) format matrix.
+///
+/// # Format
+///
+/// The compressed sparse row format stores three arrays :
+/// - A row pointer `rowptr` array (size `nrows + 1`)
+/// - A col indices `colind` array (size `nnz`)
+/// - A value `values` array (size `nnz`)
+///
+/// # Properties
+///
+/// The compressed sparse row is intended for standard arithmetic operation
+/// (add, sub, mul) and for matrix factorization (chol, qr, lu).
+///
+/// The CSR format do not provide methods for adding/removing entries.
+///
+/// # Methods
+///
+/// ## Constructors
+///
+/// - Create a csr matrix with specified entries [`CsrMatrix::new`]
+/// - Create an identity csr matrix [`CsrMatrix::eye`]
+///
+/// ## Arithmetic operations
+/// - [Addition](#impl-Add<%26CsrMatrix<T>>-for-%26CsrMatrix<T>)
+/// - [Substraction](#impl-Sub<%26CsrMatrix<T>>-for-%26CsrMatrix<T>)
+/// - [Multiplication](#impl-Mul<%26CsrMatrix<T>>-for-%26CsrMatrix<T>)
+/// - [Negation](#impl-Neg-for-%26CsrMatrix<T>)
+///
+/// # Examples
+///
+/// ```
+/// use spalinalg::CsrMatrix;
+///
+/// // Create the matrix A.
+/// //     | 0 0 3 |
+/// // A = | 1 0 0 |
+/// //     | 0 2 4 |
+/// let rowptr = vec![0, 1, 2, 4];
+/// let colind = vec![2, 0, 1, 2];
+/// let values = vec![3.0, 1.0, 2.0, 4.0];
+/// let matrix = CsrMatrix::new(3, 3, rowptr, colind, values);
+///
+/// // Iterate over matrix entries
+/// let rowptr = matrix.rowptr();
+/// let colind = matrix.colind();
+/// let values = matrix.values();
+/// for row in 0..matrix.nrows() {
+///     for ptr in rowptr[row]..rowptr[row+1] {
+///         let col = colind[ptr];
+///         let val = values[ptr];
+///     }
+/// }
+///
+/// // Transpose
+/// let transpose = matrix.transpose();
+///
+/// // Multiplication
+/// let mult = &matrix * &transpose;
+/// ```
 #[derive(Debug)]
 pub struct CsrMatrix<T: Scalar> {
     nrows: usize,
